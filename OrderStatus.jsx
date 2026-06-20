@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { fetchOrderById, updateOrderItems, cancelOwnOrder } from '../lib/api'
+import { fetchOrderById, updateOrderItems, cancelOwnOrder, fetchSiteConfig } from '../lib/api'
 import { clearActiveOrder } from '../components/OrderReminder'
+import Receipt from '../components/Receipt'
 
 const STATUS_LABELS = {
   pending: '⏳ En attente',
@@ -30,6 +31,13 @@ export default function OrderStatus() {
   const [editItems, setEditItems] = useState([])
   const [saving, setSaving] = useState(false)
   const [actionError, setActionError] = useState('')
+  const [shopName, setShopName] = useState('Boucherie')
+
+  useEffect(() => {
+    fetchSiteConfig()
+      .then((cfg) => setShopName(cfg?.site_title || 'Boucherie'))
+      .catch(() => {})
+  }, [])
 
   async function load() {
     try {
@@ -196,6 +204,11 @@ export default function OrderStatus() {
           <p style={{ margin: 0 }}><strong>Client :</strong> {order.customer_name}</p>
           <p style={{ margin: '4px 0 0' }}><strong>Téléphone :</strong> {order.phone}</p>
           {order.address && <p style={{ margin: '4px 0 0' }}><strong>Adresse :</strong> {order.address}</p>}
+        </div>
+
+        <div className="card">
+          <h3>Mon ticket</h3>
+          <Receipt order={order} shopName={shopName} />
         </div>
 
         <Link to="/boutique" className="btn btn-ghost btn-block" style={{ marginTop: 16 }}>
