@@ -31,7 +31,7 @@ export default function OrderReminder() {
     } catch {
       setOrderId(null)
     }
-  }, [])
+  }, [location.pathname])
 
   const isOnOrderPage = location.pathname === `/commande/${orderId}`
   if (!orderId || dismissed || isOnOrderPage) return null
@@ -39,7 +39,7 @@ export default function OrderReminder() {
   return (
     <div className="order-reminder">
       <div className="container order-reminder-inner">
-        <span>🧾 Vous avez une commande en cours</span>
+        <span>Vous avez une commande en cours</span>
         <div className="order-reminder-actions">
           <Link to={`/commande/${orderId}`} className="order-reminder-link">Voir ma commande</Link>
           <button className="order-reminder-close" onClick={() => setDismissed(true)} aria-label="Fermer">✕</button>
@@ -48,8 +48,8 @@ export default function OrderReminder() {
 
       <style>{`
         .order-reminder {
-          background: var(--color-primary-deep);
-          color: #fff;
+          background: var(--color-ink);
+          color: var(--color-paper);
           padding: 10px 0;
           font-size: 13px;
         }
@@ -64,15 +64,16 @@ export default function OrderReminder() {
         .order-reminder-link {
           font-weight: 700;
           text-decoration: underline;
-          color: var(--color-accent-light);
+          color: var(--color-paper);
         }
         .order-reminder-close {
           background: none;
           border: none;
-          color: #fff;
-          opacity: 0.7;
-          font-size: 14px;
+          color: var(--color-paper);
+          opacity: 0.6;
+          font-size: 13px;
           padding: 2px 6px;
+          transition: opacity 0.2s;
         }
         .order-reminder-close:hover { opacity: 1; }
       `}</style>

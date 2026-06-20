@@ -28,8 +28,14 @@ export default function AdminLogin() {
 
   return (
     <div className="login-page">
-      <div className="login-card card">
-        <h2>🔑 Administration</h2>
+      <div className="login-card">
+        <span className="login-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" width="38" height="38">
+            <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
+            <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
+          </svg>
+        </span>
+        <h2>Administration</h2>
         <p className="text-muted">Boucherie Le Carrefour d'Orient</p>
 
         <div className="field">
@@ -41,10 +47,10 @@ export default function AdminLogin() {
           <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleLogin()} />
         </div>
 
-        {error && <p style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
+        {error && <p className="login-error">{error}</p>}
 
         <button className="btn btn-primary btn-block" onClick={handleLogin} disabled={loading}>
-          {loading ? 'Connexion...' : 'Se connecter'}
+          {loading ? 'Connexion…' : 'Se connecter'}
         </button>
       </div>
 
@@ -55,15 +61,19 @@ export default function AdminLogin() {
           align-items: center;
           justify-content: center;
           padding: 24px;
-          background: var(--color-bg);
+          background: var(--color-paper);
         }
         .login-card {
           width: 100%;
-          max-width: 400px;
-          padding: 32px 24px;
+          max-width: 380px;
+          padding: 44px 36px;
+          border: 1px solid var(--color-border);
+          background: var(--color-surface);
         }
-        .login-card h2 { margin: 0 0 4px; }
-        .login-card .text-muted { margin: 0 0 24px; }
+        .login-mark { color: var(--color-ink); display: inline-flex; margin-bottom: 20px; }
+        .login-card h2 { font-family: var(--font-display); font-weight: 600; font-size: 24px; margin: 0 0 4px; letter-spacing: -0.3px; }
+        .login-card .text-muted { margin: 0 0 28px; font-size: 13px; }
+        .login-error { color: var(--color-red); font-size: 13px; margin: 0 0 12px; }
       `}</style>
     </div>
   )

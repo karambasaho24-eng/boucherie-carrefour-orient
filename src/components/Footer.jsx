@@ -4,25 +4,27 @@ export default function Footer({ config }) {
       <div className="footer-top">
         <div className="container footer-grid">
           <div className="footer-brand">
-            <img
-              src="/logo.png"
-              alt="Logo Boucherie Le Carrefour d'Orient"
-              className="footer-logo"
-            />
+            <span className="footer-mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40" width="34" height="34">
+                <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
+                <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
+                <circle cx="20" cy="3.5" r="1.6" fill="currentColor" />
+              </svg>
+            </span>
             <h3>{config?.site_title || "Carrefour d'Orient"}</h3>
             <p>Boucherie halal & épicerie orientale au cœur des Sablons, Le Mans</p>
             <div className="footer-certif">
-              <span>☪️ Halal certifié</span>
-              <span>✓ Vente directe</span>
+              <span>Halal certifié</span>
+              <span>Vente directe</span>
             </div>
           </div>
 
           <div className="footer-col">
             <h4>Informations</h4>
             <ul>
-              <li>📍 {config?.address || '55 Place des Sablons, 72100 Le Mans'}</li>
-              <li>📞 <a href={`tel:${(config?.phone || '0243410951').replace(/\s/g,'')}`}>{config?.phone || '02 43 41 09 51'}</a></li>
-              <li>🕒 {config?.opening_hours || 'Lun–Sam 09:30–19:30'}</li>
+              <li>{config?.address || '55 Place des Sablons, 72100 Le Mans'}</li>
+              <li><a href={`tel:${(config?.phone || '0243410951').replace(/\s/g,'')}`}>{config?.phone || '02 43 41 09 51'}</a></li>
+              <li>{config?.opening_hours || 'Lun–Sam 09:30–19:30'}</li>
             </ul>
           </div>
 
@@ -41,64 +43,54 @@ export default function Footer({ config }) {
         <div className="container footer-bottom-inner">
           <span>© {new Date().getFullYear()} {config?.site_title || "Boucherie Carrefour d'Orient"} — Tous droits réservés</span>
           <span className="footer-made">
-            Le Mans · France 🇫🇷 <a href="/admin/login" className="footer-admin-link">· Espace pro</a>
+            Le Mans, France <a href="/admin/login" className="footer-admin-link">· Espace pro</a>
           </span>
         </div>
       </div>
 
       <style>{`
-        .footer { background: var(--color-charcoal, #1e1e1e); color: rgba(255,255,255,0.85); }
-        .footer-top { padding: 56px 0 40px; }
+        .footer { background: var(--color-ink); color: rgba(250,249,246,0.8); }
+        .footer-top { padding: 72px 0 48px; }
         .footer-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 36px;
+          gap: 44px;
         }
-        .footer-brand {}
-        .footer-logo {
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          object-fit: contain;
-          background: #fff;
-          padding: 3px;
-          border: 2px solid rgba(170, 176, 182,0.5);
-          margin-bottom: 14px;
-        }
+        .footer-mark { color: var(--color-paper); display: inline-flex; margin-bottom: 18px; }
         .footer-brand h3 {
-          font-family: var(--font-display);
-          font-size: 20px;
-          font-weight: 700;
-          margin: 0 0 8px;
-          color: #fff;
+          font-family: var(--font-heading);
+          font-size: 18px;
+          font-weight: 800;
+          margin: 0 0 10px;
+          color: var(--color-paper);
         }
-        .footer-brand p { font-size: 13px; margin: 0 0 14px; opacity: 0.7; line-height: 1.6; }
-        .footer-certif { display: flex; gap: 12px; flex-wrap: wrap; }
+        .footer-brand p { font-size: 13px; margin: 0 0 18px; opacity: 0.6; line-height: 1.7; max-width: 280px; }
+        .footer-certif { display: flex; gap: 10px; flex-wrap: wrap; }
         .footer-certif span {
-          font-size: 11px;
+          font-family: var(--font-mono);
+          font-size: 10px;
           font-weight: 700;
-          padding: 4px 12px;
-          border-radius: 999px;
-          border: 1px solid rgba(170, 176, 182,0.4);
-          color: rgba(170, 176, 182,0.9);
+          letter-spacing: 0.6px;
+          padding: 5px 12px;
+          border: 1px solid rgba(250,249,246,0.25);
+          color: rgba(250,249,246,0.75);
         }
         .footer-col h4 {
-          font-family: var(--font-heading);
-          font-size: 12px;
+          font-family: var(--font-mono);
+          font-size: 11px;
           font-weight: 700;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: var(--color-accent);
-          margin: 0 0 16px;
+          color: var(--color-red);
+          margin: 0 0 20px;
         }
-        .footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-        .footer-col li { font-size: 13px; opacity: 0.75; line-height: 1.5; }
-        .footer-col a { opacity: 1; transition: color 0.2s; }
-        .footer-col a:hover { color: var(--color-accent); opacity: 1; }
+        .footer-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+        .footer-col li { font-size: 13.5px; opacity: 0.7; line-height: 1.6; }
+        .footer-col a { opacity: 1; transition: opacity 0.2s; border-bottom: 1px solid transparent; }
+        .footer-col a:hover { border-bottom-color: currentColor; }
         .footer-bottom {
-          border-top: 1px solid rgba(255,255,255,0.08);
-          padding: 16px 0;
-          background: rgba(0,0,0,0.2);
+          border-top: 1px solid rgba(250,249,246,0.12);
+          padding: 20px 0;
         }
         .footer-bottom-inner {
           display: flex;
@@ -106,22 +98,20 @@ export default function Footer({ config }) {
           align-items: center;
           flex-wrap: wrap;
           gap: 8px;
-          font-size: 12px;
-          opacity: 0.55;
+          font-family: var(--font-mono);
+          font-size: 11px;
+          opacity: 0.45;
         }
         @media (min-width: 768px) {
           .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
         }
         .footer-admin-link {
-          opacity: 0.6;
-          font-size: 11px;
+          opacity: 0.7;
           transition: opacity 0.2s;
         }
-        .footer-admin-link:hover {
-          opacity: 1;
-          color: var(--color-accent);
-        }
+        .footer-admin-link:hover { opacity: 1; color: var(--color-red); }
       `}</style>
     </footer>
   )
 }
+

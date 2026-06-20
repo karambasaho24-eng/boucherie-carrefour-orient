@@ -7,9 +7,9 @@ import AdminOrders from './AdminOrders'
 import AdminConfig from './AdminConfig'
 
 const TABS = [
-  { id: 'orders', label: '📦 Commandes' },
-  { id: 'products', label: '🥩 Produits' },
-  { id: 'config', label: '⚙️ Paramètres' },
+  { id: 'orders', label: 'Commandes' },
+  { id: 'products', label: 'Produits' },
+  { id: 'config', label: 'Paramètres' },
 ]
 
 export default function AdminDashboard() {
@@ -27,7 +27,10 @@ export default function AdminDashboard() {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <span>🥩</span>
+          <svg viewBox="0 0 40 40" width="30" height="30">
+            <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
+            <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
+          </svg>
           <div>
             <p className="admin-brand-title">Carrefour d'Orient</p>
             <p className="admin-brand-sub">Administration</p>
@@ -48,7 +51,7 @@ export default function AdminDashboard() {
 
         <div className="admin-footer">
           <p className="text-muted">{profile?.email}</p>
-          <button className="btn btn-outline btn-sm" onClick={handleLogout}>Déconnexion</button>
+          <button className="btn btn-ghost btn-sm" onClick={handleLogout}>Déconnexion</button>
         </div>
       </aside>
 
@@ -65,7 +68,7 @@ export default function AdminDashboard() {
               </button>
             ))}
           </div>
-          <button className="btn btn-outline btn-sm" onClick={handleLogout}>Déco</button>
+          <button className="btn btn-ghost btn-sm" onClick={handleLogout}>Déco</button>
         </div>
 
         <div className="admin-content">
@@ -79,7 +82,7 @@ export default function AdminDashboard() {
         .admin-layout {
           min-height: 100vh;
           display: flex;
-          background: var(--color-bg);
+          background: var(--color-paper);
         }
         .admin-sidebar {
           display: none;
@@ -88,7 +91,7 @@ export default function AdminDashboard() {
           background: var(--color-surface);
           border-right: 1px solid var(--color-border);
           flex-direction: column;
-          padding: 20px 0;
+          padding: 24px 0;
           position: sticky;
           top: 0;
           height: 100vh;
@@ -97,32 +100,35 @@ export default function AdminDashboard() {
         .admin-brand {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 0 20px 20px;
+          gap: 12px;
+          padding: 0 22px 22px;
           border-bottom: 1px solid var(--color-border);
-          font-size: 22px;
+          color: var(--color-ink);
         }
-        .admin-brand-title { font-weight: 700; font-size: 14px; margin: 0; }
-        .admin-brand-sub { font-size: 11px; color: var(--color-text-muted); margin: 0; }
-        .admin-nav { padding: 12px 0; flex: 1; }
+        .admin-brand-title { font-weight: 700; font-size: 13px; margin: 0; color: var(--color-text); }
+        .admin-brand-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--color-text-muted); margin: 2px 0 0; }
+        .admin-nav { padding: 14px 0; flex: 1; }
         .admin-nav-item {
           width: 100%;
-          padding: 12px 20px;
+          padding: 13px 22px;
           text-align: left;
           background: none;
           border: none;
-          font-size: 14px;
+          border-left: 2px solid transparent;
+          font-size: 13.5px;
           font-weight: 600;
           color: var(--color-text-muted);
           display: block;
+          transition: all 0.2s;
         }
+        .admin-nav-item:hover { color: var(--color-text); background: var(--color-paper-dim); }
         .admin-nav-item.active {
-          color: var(--color-primary);
-          background: rgba(74, 79, 84, 0.07);
-          border-right: 3px solid var(--color-primary);
+          color: var(--color-text);
+          background: var(--color-paper-dim);
+          border-left-color: var(--color-red);
         }
-        .admin-footer { padding: 16px 20px; border-top: 1px solid var(--color-border); }
-        .admin-footer p { font-size: 12px; margin: 0 0 8px; }
+        .admin-footer { padding: 18px 22px; border-top: 1px solid var(--color-border); }
+        .admin-footer p { font-size: 12px; margin: 0 0 10px; }
 
         .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .admin-topbar {
@@ -138,7 +144,7 @@ export default function AdminDashboard() {
         .admin-tabs { display: flex; gap: 0; }
         .tab-btn {
           padding: 16px 14px;
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 600;
           background: none;
           border: none;
@@ -147,17 +153,18 @@ export default function AdminDashboard() {
           white-space: nowrap;
         }
         .tab-btn.active {
-          color: var(--color-primary);
-          border-bottom-color: var(--color-primary);
+          color: var(--color-text);
+          border-bottom-color: var(--color-red);
         }
         .admin-content { padding: 24px 16px; flex: 1; }
 
         @media (min-width: 768px) {
           .admin-sidebar { display: flex; }
           .admin-topbar { display: none; }
-          .admin-content { padding: 32px 28px; }
+          .admin-content { padding: 36px 36px; }
         }
       `}</style>
     </div>
   )
 }
+

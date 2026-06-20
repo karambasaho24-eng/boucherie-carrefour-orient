@@ -9,11 +9,13 @@ import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
 import ProtectedRoute from './components/ProtectedRoute'
 import CartToast from './components/CartToast'
+import OrderReminder from './components/OrderReminder'
 
 import Home from './pages/Home'
 import Shop from './pages/Shop'
 import Product from './pages/Product'
 import Cart from './pages/Cart'
+import OrderStatus from './pages/OrderStatus'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 
@@ -45,6 +47,7 @@ export default function App() {
               path="*"
               element={
                 <>
+                  <OrderReminder />
                   <Navbar siteTitle={config?.site_title} />
                   <main className="main-content">
                     <Routes>
@@ -52,6 +55,7 @@ export default function App() {
                       <Route path="/boutique" element={<Shop />} />
                       <Route path="/produit/:id" element={<Product />} />
                       <Route path="/panier" element={<Cart config={config} />} />
+                      <Route path="/commande/:id" element={<OrderStatus />} />
                     </Routes>
                   </main>
                   <Footer config={config} />

@@ -2,6 +2,35 @@ import { Link, NavLink } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
 import DarkModeToggle from './DarkModeToggle'
 
+function LogoTitle({ title }) {
+  const text = title || "Carrefour d'Orient"
+  const idx = text.indexOf("Orient")
+
+  // Si le mot "Orient" n'est pas trouvé, on affiche le texte tel quel (pas de SVG nécessaire)
+  if (idx === -1) {
+    return <span className="navbar-logo-name">{text}</span>
+  }
+
+  const before = text.slice(0, idx)       // "Carrefour d'"
+  const after = text.slice(idx + 1)        // "rient" (sans le "O")
+
+  return (
+    <span className="navbar-logo-name navbar-logo-name-svg">
+      <span aria-hidden="true" className="logo-visible-parts">
+        {before}
+        <span className="logo-o-wrap">
+          <svg viewBox="0 0 22 22" width="13" height="13" className="logo-o-svg">
+            <circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" strokeWidth="2.1" />
+            <circle cx="11" cy="11" r="2.4" fill="currentColor" />
+          </svg>
+        </span>
+        {after}
+      </span>
+      <span className="sr-only">{text}</span>
+    </span>
+  )
+}
+
 export default function Navbar({ siteTitle }) {
   const { count } = useCart()
 
@@ -9,13 +38,15 @@ export default function Navbar({ siteTitle }) {
     <header className="navbar">
       <div className="container navbar-inner">
         <Link to="/" className="navbar-logo">
-          <img
-            src="/logo.png"
-            alt="Logo Boucherie Le Carrefour d'Orient"
-            className="navbar-logo-img"
-          />
+          <span className="navbar-mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" width="36" height="36">
+              <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
+              <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
+              <circle cx="20" cy="3.5" r="1.6" fill="currentColor" />
+            </svg>
+          </span>
           <div className="navbar-logo-text">
-            <span className="navbar-logo-name">{siteTitle || "Carrefour d'Orient"}</span>
+            <LogoTitle title={siteTitle} />
             <span className="navbar-logo-sub">Boucherie · Halal</span>
           </div>
         </Link>
@@ -28,7 +59,7 @@ export default function Navbar({ siteTitle }) {
         <div className="navbar-actions">
           <DarkModeToggle />
           <Link to="/panier" className="cart-btn" aria-label="Panier">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
               <line x1="3" y1="6" x2="21" y2="6"/>
               <path d="M16 10a4 4 0 01-8 0"/>
@@ -46,8 +77,7 @@ export default function Navbar({ siteTitle }) {
           background: var(--color-surface);
           border-bottom: 1px solid var(--color-border);
           height: var(--header-height);
-          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-          backdrop-filter: blur(8px);
+          backdrop-filter: blur(10px);
         }
         .navbar-inner {
           height: 100%;
@@ -59,91 +89,125 @@ export default function Navbar({ siteTitle }) {
         .navbar-logo {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
           flex-shrink: 0;
           text-decoration: none;
         }
-        .navbar-logo-img {
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          object-fit: contain;
-          background: #fff;
-          padding: 2px;
-          border: 2px solid var(--color-accent);
+        .navbar-mark {
+          color: var(--color-ink);
           flex-shrink: 0;
+          display: flex;
         }
         .navbar-logo-text {
           display: flex;
           flex-direction: column;
-          line-height: 1.2;
+          line-height: 1.25;
         }
         .navbar-logo-name {
-          font-family: var(--font-display);
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--color-primary);
+          font-family: var(--font-heading);
+          font-size: 15px;
+          font-weight: 800;
+          letter-spacing: 0.2px;
+          color: var(--color-text);
+          white-space: nowrap;
+        }
+        .navbar-logo-name-svg {
+          display: inline-flex;
+          align-items: baseline;
+        }
+        .logo-visible-parts {
+          display: inline-flex;
+          align-items: baseline;
+        }
+        .logo-o-wrap {
+          display: inline-flex;
+          align-items: center;
+          margin: 0 0.5px;
+          transform: translateY(1.5px);
+        }
+        .logo-o-svg { color: var(--color-text); flex-shrink: 0; }
+        .sr-only {
+          position: absolute;
+          width: 1px; height: 1px;
+          overflow: hidden;
+          clip: rect(0,0,0,0);
           white-space: nowrap;
         }
         .navbar-logo-sub {
-          font-size: 10px;
-          font-weight: 600;
-          letter-spacing: 1.5px;
+          font-family: var(--font-mono);
+          font-size: 9.5px;
+          font-weight: 700;
+          letter-spacing: 1.6px;
           text-transform: uppercase;
-          color: var(--color-accent-dark);
+          color: var(--color-text-muted);
         }
         .navbar-links {
           display: none;
-          gap: 6px;
+          gap: 4px;
         }
         .nav-link {
-          padding: 8px 16px;
-          border-radius: 8px;
-          font-size: 14px;
+          padding: 8px 18px;
+          border-radius: 0;
+          font-size: 12.5px;
           font-weight: 600;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
           color: var(--color-text-muted);
-          transition: all 0.2s;
-          letter-spacing: 0.2px;
+          transition: color 0.2s;
+          position: relative;
         }
-        .nav-link:hover { color: var(--color-primary); background: var(--color-cream); }
-        .nav-link.active { color: var(--color-primary); background: rgba(74, 79, 84, 0.08); }
+        .nav-link::after {
+          content: '';
+          position: absolute;
+          left: 18px;
+          right: 18px;
+          bottom: 4px;
+          height: 1px;
+          background: var(--color-ink);
+          transform: scaleX(0);
+          transform-origin: left;
+          transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .nav-link:hover { color: var(--color-text); }
+        .nav-link:hover::after, .nav-link.active::after { transform: scaleX(1); }
+        .nav-link.active { color: var(--color-text); }
         .navbar-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 14px;
         }
         .cart-btn {
           position: relative;
-          width: 42px;
-          height: 42px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 10px;
-          background: var(--color-cream);
+          border-radius: 0;
+          background: transparent;
           color: var(--color-text);
           border: 1px solid var(--color-border);
           transition: all 0.2s;
         }
         .cart-btn:hover {
-          background: var(--color-primary);
-          color: #fff;
-          border-color: var(--color-primary);
-          transform: translateY(-1px);
+          background: var(--color-ink);
+          color: var(--color-paper);
+          border-color: var(--color-ink);
         }
         .cart-count {
           position: absolute;
-          top: -5px;
-          right: -5px;
+          top: -6px;
+          right: -6px;
           background: var(--color-red);
           color: #fff;
+          font-family: var(--font-mono);
           font-size: 10px;
           font-weight: 700;
           border-radius: 999px;
-          padding: 2px 5px;
-          min-width: 18px;
+          padding: 1px 5px;
+          min-width: 17px;
           text-align: center;
-          line-height: 1.3;
+          line-height: 1.4;
         }
         @media (min-width: 768px) {
           .navbar-links { display: flex; }
@@ -152,3 +216,4 @@ export default function Navbar({ siteTitle }) {
     </header>
   )
 }
+

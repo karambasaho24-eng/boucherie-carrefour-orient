@@ -5,7 +5,7 @@ export default function CategoryFilter({ categories, active, onChange }) {
         className={`chip ${active === 'all' ? 'chip-active' : ''}`}
         onClick={() => onChange('all')}
       >
-        🥩 Tout voir
+        Tout voir
       </button>
       {categories.map((cat) => (
         <button
@@ -20,37 +20,39 @@ export default function CategoryFilter({ categories, active, onChange }) {
       <style>{`
         .category-filter {
           display: flex;
-          gap: 8px;
+          gap: 0;
           overflow-x: auto;
-          padding: 4px 0 16px;
           scrollbar-width: none;
         }
         .category-filter::-webkit-scrollbar { display: none; }
         .chip {
           flex-shrink: 0;
           padding: 9px 18px;
-          border-radius: 999px;
-          border: 1.5px solid var(--color-border);
-          background: var(--color-surface);
+          border-radius: 0;
+          border: 1px solid var(--color-border);
+          border-right-width: 0;
+          background: transparent;
           color: var(--color-text-muted);
-          font-size: 13px;
+          font-family: var(--font-mono);
+          font-size: 11px;
           font-weight: 600;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
           white-space: nowrap;
           transition: all 0.2s ease;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
+        .chip:last-child { border-right-width: 1px; }
         .chip:hover:not(.chip-active) {
-          border-color: var(--color-primary);
-          color: var(--color-primary);
-          background: rgba(74, 79, 84,0.04);
+          color: var(--color-text);
+          background: var(--color-paper-dim);
         }
         .chip-active {
-          background: var(--color-primary);
-          border-color: var(--color-primary);
-          color: #fff;
-          box-shadow: 0 3px 10px rgba(74, 79, 84,0.3);
+          background: var(--color-ink);
+          border-color: var(--color-ink);
+          color: var(--color-paper);
         }
       `}</style>
     </div>
   )
 }
+

@@ -15,6 +15,7 @@ const EMPTY_FORM = {
   category: '',
   image_url: '',
   is_available: true,
+  is_featured: false,
 }
 
 export default function AdminProducts() {
@@ -58,6 +59,7 @@ export default function AdminProducts() {
       category: p.category || '',
       image_url: p.image_url || '',
       is_available: p.is_available,
+      is_featured: !!p.is_featured,
     })
     setError('')
     setShowForm(true)
@@ -90,6 +92,7 @@ export default function AdminProducts() {
         category: form.category.trim(),
         image_url: form.image_url,
         is_available: form.is_available,
+        is_featured: form.is_featured,
       }
       if (editId) {
         await updateProduct(editId, payload)
@@ -153,25 +156,30 @@ export default function AdminProducts() {
             <div className="field">
               <label>Image</label>
               {form.image_url && (
-                <img src={form.image_url} alt="preview" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 6 }} />
+                <img src={form.image_url} alt="preview" className="img-preview" />
               )}
               <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleImageUpload} />
-              <button className="btn btn-outline btn-sm" onClick={() => fileRef.current.click()} disabled={uploading}>
-                {uploading ? '⏳ Upload...' : '📷 Prendre une photo / Choisir une image'}
+              <button className="btn btn-ghost btn-sm" onClick={() => fileRef.current.click()} disabled={uploading}>
+                {uploading ? 'Upload…' : 'Prendre une photo / Choisir une image'}
               </button>
             </div>
 
-            <div className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <div className="field field-row">
               <input type="checkbox" id="available" checked={form.is_available} onChange={e => setForm(f => ({ ...f, is_available: e.target.checked }))} />
-              <label htmlFor="available" style={{ marginBottom: 0 }}>Disponible</label>
+              <label htmlFor="available" className="field-row-label">Disponible</label>
             </div>
 
-            {error && <p style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
+            <div className="field field-row">
+              <input type="checkbox" id="featured" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} />
+              <label htmlFor="featured" className="field-row-label">Mettre en avant (section "Produits du moment")</label>
+            </div>
+
+            {error && <p className="form-error">{error}</p>}
 
             <div className="modal-actions">
-              <button className="btn btn-outline" onClick={() => setShowForm(false)}>Annuler</button>
+              <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Annuler</button>
               <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                {saving ? 'Sauvegarde…' : 'Sauvegarder'}
               </button>
             </div>
           </div>
@@ -179,7 +187,7 @@ export default function AdminProducts() {
       )}
 
       {loading ? (
-        <p className="text-muted">Chargement...</p>
+        <p className="text-muted">Chargement…</p>
       ) : (
         <div className="product-table">
           <div className="product-table-header">
@@ -194,58 +202,78 @@ export default function AdminProducts() {
               <div className="product-row-name">
                 {p.image_url && <img src={p.image_url} alt={p.name} />}
                 <span>{p.name}</span>
+                {p.is_featured && <span className="featured-tag" title="Mis en avant en page d'accueil">★</span>}
               </div>
               <span>
                 {p.promo_price != null ? (
-                  <><s style={{ opacity: 0.5, fontSize: 12 }}>{p.price.toFixed(2)}€</s> <strong style={{ color: 'var(--color-danger)' }}>{p.promo_price.toFixed(2)}€</strong></>
+                  <><s className="price-struck">{p.price.toFixed(2)}€</s> <strong className="price-promo">{p.promo_price.toFixed(2)}€</strong></>
                 ) : (
                   `${p.price.toFixed(2)} €`
                 )}
               </span>
               <span className="text-muted">{p.category || '—'}</span>
-              <span>{p.is_available ? '✅' : '❌'}</span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button className="btn btn-outline btn-sm" onClick={() => openEdit(p)}>✏️</button>
-                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}>🗑️</button>
+              <span className={p.is_available ? 'avail-dot avail-yes' : 'avail-dot avail-no'} aria-label={p.is_available ? 'Disponible' : 'Indisponible'} />
+              <div className="row-actions">
+                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(p)} aria-label="Modifier">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M17 3l4 4-12 12H5v-4z" /></svg>
+                </button>
+                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)} aria-label="Supprimer">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 6h16M9 6V4h6v2m-9 0l1 14h10l1-14" /></svg>
+                </button>
               </div>
             </div>
           ))}
-          {products.length === 0 && <p className="text-muted" style={{ padding: 16 }}>Aucun produit.</p>}
+          {products.length === 0 && <p className="text-muted empty-row">Aucun produit.</p>}
         </div>
       )}
 
       <style>{`
         .admin-section { padding: 0 0 40px; }
-        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .section-header h2 { margin: 0; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .section-header h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -0.3px; }
         .modal-overlay {
-          position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
+          position: fixed; inset: 0; background: rgba(10,10,10,0.6); z-index: 100;
           display: flex; align-items: flex-start; justify-content: center; padding: 24px;
           overflow-y: auto;
         }
-        .modal { width: 100%; max-width: 520px; padding: 24px; }
-        .modal h3 { margin: 0 0 16px; }
+        .modal { width: 100%; max-width: 520px; padding: 32px; background: var(--color-surface); border: 1px solid var(--color-border); }
+        .modal h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 0 0 20px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
-        .product-table { border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; }
+        .field-row { flex-direction: row; align-items: center; gap: 10px; }
+        .field-row-label { margin-bottom: 0; }
+        .img-preview { width: 76px; height: 76px; object-fit: cover; margin-bottom: 8px; border: 1px solid var(--color-border); }
+        .form-error { color: var(--color-red); font-size: 13px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .product-table { border: 1px solid var(--color-border); overflow-x: auto; }
         .product-table-header, .product-row {
           display: grid;
           grid-template-columns: 2fr 1fr 1fr 60px 90px;
           align-items: center;
           gap: 12px;
-          padding: 12px 16px;
+          padding: 13px 16px;
           font-size: 13px;
+          min-width: 560px;
         }
         .product-table-header {
-          background: var(--color-bg);
+          background: var(--color-paper-dim);
+          font-family: var(--font-mono);
           font-weight: 700;
           color: var(--color-text-muted);
-          font-size: 12px;
+          font-size: 10.5px;
+          letter-spacing: 1px;
           text-transform: uppercase;
         }
         .product-row { border-top: 1px solid var(--color-border); }
-        .product-row-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .product-row-name img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; }
+        .product-row-name { display: flex; align-items: center; gap: 10px; font-weight: 600; font-family: var(--font-heading); }
+        .product-row-name img { width: 36px; height: 36px; object-fit: cover; }
+        .featured-tag { color: var(--color-red); font-size: 13px; flex-shrink: 0; }
+        .price-struck { opacity: 0.45; font-size: 12px; font-family: var(--font-mono); }
+        .price-promo { color: var(--color-red); font-family: var(--font-mono); }
+        .avail-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+        .avail-yes { background: #2f6b3a; }
+        .avail-no { background: var(--color-border-dark); }
+        .row-actions { display: flex; gap: 6px; }
+        .empty-row { padding: 20px 16px; }
       `}</style>
     </div>
   )

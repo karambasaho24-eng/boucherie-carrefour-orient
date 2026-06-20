@@ -31,18 +31,17 @@ function ReceiptVisual({ order, shopName }) {
     <div
       id={`receipt-printable-${order?.id || 'preview'}`}
       style={{
-        fontFamily: 'Courier New, Courier, monospace',
+        fontFamily: "'Space Mono', 'Courier New', Courier, monospace",
         fontSize: 13,
         background: '#fff',
-        color: '#000',
+        color: '#0a0a0a',
         width: 320,
         maxWidth: '100%',
         margin: '0 auto',
         padding: '28px 24px',
         lineHeight: 1.55,
         letterSpacing: 0,
-        borderRadius: 4,
-        boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+        border: '1px solid #e2e0d9',
       }}
     >
       <div style={{ textAlign: 'center', marginBottom: 16 }}>
@@ -121,9 +120,9 @@ export default function Receipt({ order, shopName }) {
   return (
     <div className="receipt-block">
       <ReceiptVisual order={order} shopName={shopName} />
-      {downloadError && <p className="error-msg" style={{ marginTop: 10 }}>⚠️ {downloadError}</p>}
-      <button className="btn btn-outline btn-block" style={{ marginTop: 14 }} onClick={handleDownload} disabled={downloading}>
-        {downloading ? 'Génération...' : '📥 Télécharger le ticket'}
+      {downloadError && <p className="error-msg" style={{ marginTop: 10 }}>{downloadError}</p>}
+      <button className="btn btn-ghost btn-block" style={{ marginTop: 14 }} onClick={handleDownload} disabled={downloading}>
+        {downloading ? 'Génération…' : 'Télécharger le ticket'}
       </button>
 
       <style>{`

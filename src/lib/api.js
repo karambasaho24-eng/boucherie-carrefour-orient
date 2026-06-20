@@ -68,6 +68,44 @@ export async function updateOrderStatus(id, status) {
   return data
 }
 
+export async function fetchOrderById(id) {
+  const { data, error } = await supabase.from('orders').select('*').eq('id', id).single()
+  if (error) throw error
+  return data
+}
+
+// Le client ne peut modifier ses articles que si la commande est encore "pending"
+// (la policy RLS côté Supabase doit aussi vérifier cette condition pour une sécurité réelle)
+export async function updateOrderItems(id, { items, total_price }) {
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ items, total_price })
+    .eq('id', id)
+    .eq('status', 'pending')
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function cancelOwnOrder(id) {
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status: 'cancelled' })
+    .eq('id', id)
+    .eq('status', 'pending')
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// Suppression définitive d'une commande — réservée à l'admin
+export async function deleteOrder(id) {
+  const { error } = await supabase.from('orders').delete().eq('id', id)
+  if (error) throw error
+}
+
 // ---------- SITE CONFIG ----------
 export async function fetchSiteConfig() {
   const { data, error } = await supabase.from('site_config').select('*').eq('id', 1).single()

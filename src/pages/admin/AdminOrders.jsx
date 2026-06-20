@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchOrders, updateOrderStatus } from '../../lib/api'
+import { fetchOrders, updateOrderStatus, deleteOrder } from '../../lib/api'
 
 const STATUSES = [
-  { value: 'pending', label: '⏳ En attente', color: '#f39c12' },
-  { value: 'confirmed', label: '✅ Confirmée', color: '#2980b9' },
-  { value: 'preparing', label: '👨‍🍳 En préparation', color: '#8e44ad' },
-  { value: 'ready', label: '🎁 Prête', color: '#27ae60' },
-  { value: 'completed', label: '✔️ Terminée', color: '#7f8c8d' },
-  { value: 'cancelled', label: '❌ Annulée', color: '#c0392b' },
+  { value: 'pending', label: 'En attente', color: '#8a8a86' },
+  { value: 'confirmed', label: 'Confirmée', color: '#0a0a0a' },
+  { value: 'preparing', label: 'En préparation', color: '#0a0a0a' },
+  { value: 'ready', label: 'Prête', color: '#2f6b3a' },
+  { value: 'completed', label: 'Terminée', color: '#6b6b68' },
+  { value: 'cancelled', label: 'Annulée', color: '#b5181f' },
 ]
 
 const REFRESH_INTERVAL_MS = 15000
@@ -88,6 +88,17 @@ export default function AdminOrders() {
     }
   }
 
+  async function handleDelete(id) {
+    if (!confirm('Supprimer définitivement cette commande de l\'historique ? Cette action est irréversible.')) return
+    try {
+      await deleteOrder(id)
+      setOrders((prev) => prev.filter((o) => o.id !== id))
+      knownIdsRef.current.delete(id)
+    } catch (e) {
+      alert('Erreur lors de la suppression.')
+    }
+  }
+
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter)
 
   return (
@@ -101,17 +112,17 @@ export default function AdminOrders() {
       </div>
 
       {newOrderAlert && (
-        <div className="new-order-alert">🔔 Nouvelle commande reçue !</div>
+        <div className="new-order-alert">Nouvelle commande reçue</div>
       )}
 
       {loading ? (
-        <p className="text-muted">Chargement...</p>
+        <p className="text-muted">Chargement…</p>
       ) : filtered.length === 0 ? (
         <p className="text-muted">Aucune commande.</p>
       ) : (
         <div className="orders-list">
           {filtered.map((order) => (
-            <div key={order.id} className="order-card card">
+            <div key={order.id} className="order-card">
               <div className="order-head" onClick={() => setExpanded(expanded === order.id ? null : order.id)}>
                 <div>
                   <span className="order-id">#{order.id.slice(0, 8).toUpperCase()}</span>
@@ -122,16 +133,16 @@ export default function AdminOrders() {
                   <span className="order-status-dot" style={{ background: statusColor(order.status) }}>
                     {statusLabel(order.status)}
                   </span>
-                  <span className="text-muted">{expanded === order.id ? '▲' : '▼'}</span>
+                  <span className="text-muted chevron">{expanded === order.id ? '−' : '+'}</span>
                 </div>
               </div>
 
               {expanded === order.id && (
                 <div className="order-body">
                   <div className="order-meta-row">
-                    <span>📞 {order.phone}</span>
-                    {order.address && <span>📍 {order.address}</span>}
-                    <span className="text-muted">🕒 {formatDate(order.created_at)}</span>
+                    <span>{order.phone}</span>
+                    {order.address && <span>{order.address}</span>}
+                    <span className="text-muted">{formatDate(order.created_at)}</span>
                   </div>
 
                   <div className="order-items-list">
@@ -153,13 +164,19 @@ export default function AdminOrders() {
                       {STATUSES.map((s) => (
                         <button
                           key={s.value}
-                          className={`btn btn-sm ${order.status === s.value ? 'btn-primary' : 'btn-outline'}`}
+                          className={`btn btn-sm ${order.status === s.value ? 'btn-primary' : 'btn-ghost'}`}
                           onClick={() => handleStatus(order.id, s.value)}
                         >
                           {s.label}
                         </button>
                       ))}
                     </div>
+                    <button
+                      className="btn btn-danger btn-sm delete-order-btn"
+                      onClick={() => handleDelete(order.id)}
+                    >
+                      Supprimer cette commande
+                    </button>
                   </div>
                 </div>
               )}
@@ -169,42 +186,45 @@ export default function AdminOrders() {
       )}
 
       <style>{`
-        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .section-header h2 { margin: 0; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .section-header h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -0.3px; }
         .new-order-alert {
-          background: var(--color-accent);
-          color: #1a1a1a;
-          font-weight: 700;
-          padding: 10px 16px;
-          border-radius: 8px;
-          margin-bottom: 16px;
+          background: var(--color-ink);
+          color: var(--color-paper);
+          font-weight: 600;
+          font-size: 13px;
+          letter-spacing: 0.5px;
+          padding: 12px 16px;
+          margin-bottom: 18px;
           text-align: center;
-          animation: pulse-alert 1s ease-in-out infinite;
+          animation: pulse-alert 1.4s ease-in-out infinite;
         }
         @keyframes pulse-alert {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+          50% { opacity: 0.6; }
         }
-        .orders-list { display: flex; flex-direction: column; gap: 12px; }
-        .order-card { overflow: hidden; }
+        .orders-list { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--color-border); }
+        .order-card { overflow: hidden; border-bottom: 1px solid var(--color-border); }
         .order-head {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 14px 16px; cursor: pointer; gap: 12px; flex-wrap: wrap;
+          padding: 16px 4px; cursor: pointer; gap: 12px; flex-wrap: wrap;
         }
-        .order-id { font-family: monospace; font-weight: 700; font-size: 13px; margin-right: 10px; }
-        .order-client { font-weight: 600; }
-        .order-head-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .order-total { font-weight: 700; color: var(--color-primary); }
+        .order-id { font-family: var(--font-mono); font-weight: 700; font-size: 12px; margin-right: 12px; color: var(--color-text-muted); }
+        .order-client { font-weight: 700; font-family: var(--font-heading); }
+        .order-head-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .order-total { font-weight: 700; font-family: var(--font-mono); }
         .order-status-dot {
-          font-size: 12px; font-weight: 700;
-          color: #fff; padding: 4px 10px; border-radius: 999px;
+          font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+          color: #fff; padding: 4px 11px;
         }
-        .order-body { padding: 0 16px 16px; border-top: 1px solid var(--color-border); }
-        .order-meta-row { display: flex; flex-wrap: wrap; gap: 12px; padding: 12px 0; font-size: 13px; }
-        .order-items-list { background: var(--color-bg); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-        .order-item-row { display: grid; grid-template-columns: 1fr 40px 80px; gap: 8px; padding: 4px 0; font-size: 13px; }
-        .order-item-row.total { border-top: 1px solid var(--color-border); margin-top: 6px; padding-top: 8px; }
-        .status-actions { display: flex; flex-direction: column; gap: 8px; }
+        .chevron { font-family: var(--font-mono); font-size: 16px; width: 16px; text-align: center; }
+        .order-body { padding: 0 4px 20px; border-top: 1px solid var(--color-border); }
+        .order-meta-row { display: flex; flex-wrap: wrap; gap: 16px; padding: 14px 0; font-size: 13px; }
+        .order-items-list { background: var(--color-paper-dim); padding: 14px 16px; margin-bottom: 16px; }
+        .order-item-row { display: grid; grid-template-columns: 1fr 40px 80px; gap: 8px; padding: 5px 0; font-size: 13px; font-family: var(--font-mono); }
+        .order-item-row.total { border-top: 1px solid var(--color-border); margin-top: 8px; padding-top: 10px; }
+        .status-actions { display: flex; flex-direction: column; gap: 10px; }
+        .status-actions > .text-muted { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; }
         .status-btns { display: flex; flex-wrap: wrap; gap: 6px; }
       `}</style>
     </div>

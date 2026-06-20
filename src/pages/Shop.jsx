@@ -33,9 +33,8 @@ export default function Shop() {
   return (
     <div className="shop-page">
       <div className="shop-hero">
-        <div className="shop-hero-overlay" />
         <div className="container shop-hero-content">
-          <div className="section-label" style={{ color: 'rgba(170, 176, 182,0.85)' }}>Notre sélection</div>
+          <div className="section-label section-label-light">Notre sélection</div>
           <h1>La Boutique</h1>
           <p>Viandes fraîches, produits halal & spécialités orientales</p>
         </div>
@@ -55,7 +54,10 @@ export default function Shop() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <span>🔍</span>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <circle cx="10" cy="10" r="7" />
+              <line x1="21" y1="21" x2="15" y2="15" />
+            </svg>
             <p>Aucun produit trouvé pour cette recherche.</p>
           </div>
         ) : (
@@ -74,49 +76,55 @@ export default function Shop() {
         .shop-page {}
         .shop-hero {
           position: relative;
-          background: linear-gradient(135deg, var(--color-primary-deep, #2e3236) 0%, var(--color-primary) 100%);
-          padding: 52px 0 44px;
-          color: #fff;
+          background: var(--color-ink);
+          padding: 80px 0 56px;
+          color: var(--color-paper);
           overflow: hidden;
         }
-        .shop-hero::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M30 0L60 30 30 60 0 30z'/%3E%3C/g%3E%3C/svg%3E");
-          background-size: 60px 60px;
-        }
-        .shop-hero-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.15); }
+        .shop-hero-overlay { display: none; }
         .shop-hero-content { position: relative; z-index: 1; }
         .shop-hero-content h1 {
-          font-family: var(--font-display);
-          font-size: clamp(28px, 5vw, 44px);
-          font-weight: 900;
-          margin: 4px 0 8px;
+          font-family: var(--font-heading);
+          font-size: clamp(38px, 7vw, 64px);
+          font-weight: 800;
+          letter-spacing: -1px;
+          margin: 6px 0 10px;
         }
-        .shop-hero-content p { font-size: 15px; opacity: 0.8; margin: 0; }
-        .shop-body { padding: 32px 0 60px; }
-        .shop-controls { margin-bottom: 8px; }
+        .shop-hero-content p { font-size: 15px; color: rgba(250,249,246,0.6); margin: 0; }
+        .shop-body { padding: 40px 0 70px; }
+        .shop-controls {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+          margin-bottom: 28px;
+          padding-bottom: 24px;
+          border-bottom: 1px solid var(--color-border);
+        }
         .shop-results-count {
-          font-size: 13px;
+          font-family: var(--font-mono);
+          font-size: 11px;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
           color: var(--color-text-muted);
-          margin-bottom: 16px;
-          font-weight: 500;
+          margin-bottom: 20px;
         }
         .product-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
+          grid-template-columns: 1fr;
+          gap: 1px;
+          background: var(--color-border);
         }
         .empty-state {
           text-align: center;
-          padding: 60px 20px;
+          padding: 80px 20px;
           color: var(--color-text-muted);
+          border: 1px solid var(--color-border);
         }
-        .empty-state span { font-size: 48px; display: block; margin-bottom: 12px; }
-        .empty-state p { font-size: 16px; margin: 0; }
+        .empty-state svg { margin: 0 auto 16px; opacity: 0.4; }
+        .empty-state p { font-size: 15px; margin: 0; }
         @media (min-width: 640px) {
-          .product-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+          .shop-controls { flex-direction: row; align-items: center; justify-content: space-between; }
+          .product-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (min-width: 1024px) {
           .product-grid { grid-template-columns: repeat(4, 1fr); }
