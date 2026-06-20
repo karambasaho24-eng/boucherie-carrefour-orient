@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
 import { createOrder } from '../lib/api'
+import { rememberActiveOrder } from '../components/OrderReminder'
+import Receipt from '../components/Receipt'
 
 const STATUS_LABELS = {
   pending: '⏳ En attente',
@@ -14,7 +16,6 @@ const STATUS_LABELS = {
 
 const CUSTOMER_STORAGE_KEY = 'carrefour_orient_customer'
 
-// Validation simple d'un numéro de téléphone français (mobile ou fixe)
 function isValidPhone(phone) {
   const cleaned = phone.replace(/[\s.\-]/g, '')
   return /^(\+33|0)[1-9](\d{8})$/.test(cleaned)
@@ -43,12 +44,10 @@ export default function Cart({ config }) {
   const [success, setSuccess] = useState('')
 
   const whatsappNumber = (config?.whatsapp_number || '').replace(/\D/g, '')
-  // Mode défini par l'admin : 'site' | 'whatsapp' | 'both'. Par défaut 'both' si non configuré.
   const orderMode = config?.order_mode || 'both'
   const showSiteButton = orderMode === 'site' || orderMode === 'both'
   const showWhatsAppButton = (orderMode === 'whatsapp' || orderMode === 'both') && !!whatsappNumber
 
-  // Pré-remplir nom/téléphone si le client est déjà venu sur cet appareil
   useEffect(() => {
     try {
       const raw = localStorage.getItem(CUSTOMER_STORAGE_KEY)
@@ -73,7 +72,6 @@ export default function Cart({ config }) {
     }
   }
 
-  // Validation centralisée — retourne un message d'erreur clair ou null si OK
   function validate() {
     if (!form.customer_name.trim()) return 'Veuillez indiquer votre nom.'
     if (!form.phone.trim()) return 'Veuillez indiquer votre téléphone.'
@@ -82,7 +80,6 @@ export default function Cart({ config }) {
     return null
   }
 
-  // OPTION 1 — Commande classique enregistrée dans Supabase, sans WhatsApp
   async function handleSubmitOrder() {
     const validationError = validate()
     if (validationError) {
@@ -107,6 +104,7 @@ export default function Cart({ config }) {
 
       const created = await createOrder(orderData)
       rememberCustomer()
+      rememberActiveOrder(created.id)
       setOrder(created)
       clearCart()
     } catch (err) {
@@ -117,8 +115,6 @@ export default function Cart({ config }) {
     }
   }
 
-  // OPTION 2 — Commande via WhatsApp : enregistre aussi dans Supabase si possible,
-  // mais ouvre WhatsApp dans tous les cas (jamais bloquant).
   async function handleSubmitWhatsApp() {
     const validationError = validate()
     if (validationError) {
@@ -149,8 +145,8 @@ export default function Cart({ config }) {
       const created = await createOrder(orderData)
       orderId = created.id.slice(0, 8).toUpperCase()
       rememberCustomer()
+      rememberActiveOrder(created.id)
     } catch (err) {
-      // On ne bloque jamais WhatsApp si l'enregistrement échoue
       console.error('Commande non enregistrée en base (WhatsApp utilisé en secours) :', err)
     }
 
@@ -174,7 +170,15 @@ export default function Cart({ config }) {
           <div className="order-meta">
             <p>🏷️ Statut : <span className="badge badge-status">{STATUS_LABELS[order.status]}</span></p>
           </div>
-          <Link to="/boutique" className="btn btn-primary btn-block" style={{ marginTop: 16 }}>
+
+          <div style={{ marginTop: 20 }}>
+            <Receipt order={order} shopName={config?.site_title} />
+          </div>
+
+          <Link to={`/commande/${order.id}`} className="btn btn-outline btn-block" style={{ marginTop: 16 }}>
+            📋 Voir / modifier ma commande
+          </Link>
+          <Link to="/boutique" className="btn btn-primary btn-block" style={{ marginTop: 10 }}>
             Continuer mes achats
           </Link>
         </div>
