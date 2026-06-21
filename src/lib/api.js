@@ -1,6 +1,12 @@
+// ============================================================
+// src/lib/api.js  (REMPLACEMENT COMPLET)
+// Fonctions Supabase — version avec gestion des stocks
+// ============================================================
+
 import { supabase } from './supabaseClient'
 
 // ---------- PRODUCTS ----------
+
 export async function fetchProducts() {
   const { data, error } = await supabase
     .from('products')
@@ -10,13 +16,27 @@ export async function fetchProducts() {
   return data
 }
 
+/**
+ * Produits visibles côté client :
+ * - Tout sauf "disabled"
+ * - (Out of stock est affiché avec badge, pas masqué)
+ */
 export async function fetchAvailableProducts() {
   const { data, error } = await supabase
     .from('products')
     .select('*')
-    .eq('is_available', true)
+    .neq('availability_mode', 'disabled')
     .order('created_at', { ascending: false })
-  if (error) throw error
+  if (error) {
+    // Rétrocompatibilité si la colonne n'existe pas encore (avant migration v5)
+    const { data: fallback, error: e2 } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_available', true)
+      .order('created_at', { ascending: false })
+    if (e2) throw e2
+    return fallback
+  }
   return data
 }
 
@@ -47,6 +67,7 @@ export async function uploadProductImage(file) {
 }
 
 // ---------- ORDERS ----------
+
 export async function createOrder(order) {
   const { data, error } = await supabase.from('orders').insert(order).select().single()
   if (error) throw error
@@ -74,8 +95,6 @@ export async function fetchOrderById(id) {
   return data
 }
 
-// Le client ne peut modifier ses articles que si la commande est encore "pending"
-// (la policy RLS côté Supabase doit aussi vérifier cette condition pour une sécurité réelle)
 export async function updateOrderItems(id, { items, total_price }) {
   const { data, error } = await supabase
     .from('orders')
@@ -100,13 +119,13 @@ export async function cancelOwnOrder(id) {
   return data
 }
 
-// Suppression définitive d'une commande — réservée à l'admin
 export async function deleteOrder(id) {
   const { error } = await supabase.from('orders').delete().eq('id', id)
   if (error) throw error
 }
 
 // ---------- SITE CONFIG ----------
+
 export async function fetchSiteConfig() {
   const { data, error } = await supabase.from('site_config').select('*').eq('id', 1).single()
   if (error) throw error
@@ -129,6 +148,7 @@ export async function uploadSiteImage(file) {
 }
 
 // ---------- AUTH ----------
+
 export async function signIn(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw error
