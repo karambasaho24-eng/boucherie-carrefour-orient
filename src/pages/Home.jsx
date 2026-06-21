@@ -3,16 +3,28 @@ import { Link } from 'react-router-dom'
 import { fetchAvailableProducts } from '../lib/api'
 import ProductCard from '../components/ProductCard'
 
-function useReveal() {
+function useReveal(deps = []) {
   useEffect(() => {
-    const els = document.querySelectorAll('.reveal')
+    const els = document.querySelectorAll('.reveal:not(.visible)')
+    if (els.length === 0) return
+
     const obs = new IntersectionObserver(
       (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target) } }),
       { threshold: 0.12 }
     )
     els.forEach(el => obs.observe(el))
-    return () => obs.disconnect()
-  }, [])
+
+    // Filet de sécurité : si un élément .reveal n'a jamais déclenché
+    // l'observer (élément déjà hors-écran au montage, hauteur nulle au
+    // moment de l'observation, contenu injecté après coup, etc.), on le
+    // rend visible quand même après un court délai pour éviter qu'il
+    // reste bloqué en opacity:0 indéfiniment.
+    const fallback = setTimeout(() => {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible'))
+    }, 1500)
+
+    return () => { obs.disconnect(); clearTimeout(fallback) }
+  }, deps)
 }
 
 function useParallaxHero() {
@@ -60,7 +72,7 @@ export default function Home({ config }) {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
-  useReveal()
+  useReveal([loading, products.length])
   const heroRef = useParallaxHero()
   const tiltRef = useMouseTilt()
 
