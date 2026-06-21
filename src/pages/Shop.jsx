@@ -1,5 +1,12 @@
+// ============================================================
+// src/pages/Shop.jsx  (REMPLACEMENT COMPLET)
+// Boutique avec Supabase Realtime — mise à jour instantanée
+// des stocks sans recharger la page.
+// ============================================================
+
 import { useEffect, useMemo, useState } from 'react'
 import { fetchAvailableProducts } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard'
 import CategoryFilter from '../components/CategoryFilter'
 import SearchBar from '../components/SearchBar'
@@ -9,12 +16,58 @@ export default function Shop() {
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState('all')
   const [search, setSearch] = useState('')
+  const [stockFlash, setStockFlash] = useState(null) // id du produit mis à jour
+
+  // Chargement initial
+  async function load() {
+    try {
+      const data = await fetchAvailableProducts()
+      setProducts(data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    fetchAvailableProducts()
-      .then(setProducts)
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    load()
+
+    // Supabase Realtime : écoute les changements sur la table products
+    const channel = supabase
+      .channel('shop-products-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'products' },
+        (payload) => {
+          const updated = payload.new
+
+          // Met à jour le produit dans la liste locale immédiatement
+          setProducts((prev) => {
+            // Si le produit passe en "disabled", on le retire
+            if (updated.availability_mode === 'disabled') {
+              return prev.filter((p) => p.id !== updated.id)
+            }
+            // Sinon on met à jour ses données
+            const exists = prev.find((p) => p.id === updated.id)
+            if (exists) {
+              return prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
+            }
+            // Nouveau produit devenu disponible
+            return [...prev, updated]
+          })
+
+          // Flash visuel sur la carte mise à jour
+          setStockFlash(updated.id)
+          setTimeout(() => setStockFlash(null), 2000)
+        }
+      )
+      .subscribe()
+
+    // Nettoyage à la destruction du composant
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const categories = useMemo(
@@ -36,7 +89,7 @@ export default function Shop() {
         <div className="container shop-hero-content">
           <div className="section-label section-label-light">Notre sélection</div>
           <h1>La Boutique</h1>
-          <p>Viandes fraîches, produits halal & spécialités orientales</p>
+          <p>Viandes fraîches, produits halal &amp; spécialités orientales</p>
         </div>
       </div>
 
@@ -49,14 +102,13 @@ export default function Shop() {
         {loading ? (
           <div className="product-grid">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="skeleton" style={{ height: 320, borderRadius: 'var(--radius-lg)' }} />
+              <div key={i} className="skeleton" style={{ height: 320 }} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <circle cx="10" cy="10" r="7" />
-              <line x1="21" y1="21" x2="15" y2="15" />
+              <circle cx="10" cy="10" r="7" /><line x1="21" y1="21" x2="15" y2="15" />
             </svg>
             <p>Aucun produit trouvé pour cette recherche.</p>
           </div>
@@ -66,7 +118,14 @@ export default function Shop() {
               {filtered.length} produit{filtered.length > 1 ? 's' : ''} disponible{filtered.length > 1 ? 's' : ''}
             </div>
             <div className="product-grid">
-              {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
+              {filtered.map((p) => (
+                <div
+                  key={p.id}
+                  className={`product-grid-item${stockFlash === p.id ? ' stock-updated' : ''}`}
+                >
+                  <ProductCard product={p} />
+                </div>
+              ))}
             </div>
           </>
         )}
@@ -81,7 +140,6 @@ export default function Shop() {
           color: var(--color-paper);
           overflow: hidden;
         }
-        .shop-hero-overlay { display: none; }
         .shop-hero-content { position: relative; z-index: 1; }
         .shop-hero-content h1 {
           font-family: var(--font-heading);
@@ -113,6 +171,20 @@ export default function Shop() {
           grid-template-columns: 1fr;
           gap: 1px;
           background: var(--color-border);
+        }
+        .product-grid-item {
+          background: var(--color-surface);
+          transition: outline 0.3s ease;
+        }
+        /* Flash vert quand le stock est mis à jour en temps réel */
+        .product-grid-item.stock-updated {
+          outline: 2px solid #2f6b3a;
+          outline-offset: -2px;
+          animation: stock-flash 2s ease forwards;
+        }
+        @keyframes stock-flash {
+          0%   { outline-color: #2f6b3a; }
+          100% { outline-color: transparent; }
         }
         .empty-state {
           text-align: center;
