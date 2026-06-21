@@ -59,20 +59,47 @@ function useMouseTilt() {
 export default function Home({ config }) {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   useReveal()
   const heroRef = useParallaxHero()
   const tiltRef = useMouseTilt()
 
   useEffect(() => {
+    let cancelled = false
+
+    // Filet de sécurité : si la requête ne se résout jamais (souci réseau,
+    // configuration Supabase manquante, etc.), on arrête quand même le
+    // chargement après 8s au lieu de laisser le skeleton tourner à l'infini.
+    const safetyTimer = setTimeout(() => {
+      if (!cancelled) {
+        setLoadError('Le chargement prend trop de temps. Vérifiez la connexion à la base de données.')
+        setLoading(false)
+      }
+    }, 8000)
+
     fetchAvailableProducts()
       .then((data) => {
+        if (cancelled) return
         const featured = data.filter((p) => p.is_featured)
         // Si l'admin n'a marqué aucun produit comme vedette, on affiche les plus
         // récents pour que la section ne soit jamais vide sur un site neuf
         setProducts(featured.length > 0 ? featured.slice(0, 6) : data.slice(0, 6))
       })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        console.error('Erreur de chargement des produits :', err)
+        if (!cancelled) setLoadError("Impossible de charger les produits pour le moment.")
+      })
+      .finally(() => {
+        if (!cancelled) {
+          clearTimeout(safetyTimer)
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+      clearTimeout(safetyTimer)
+    }
   }, [])
 
   const phoneClean = (config?.phone || '0243410951').replace(/\s/g, '')
@@ -208,6 +235,8 @@ export default function Home({ config }) {
                 <div key={i} className="skeleton" style={{ height: 340 }} />
               ))}
             </div>
+          ) : loadError ? (
+            <p className="text-muted mt-16">{loadError}</p>
           ) : products.length === 0 ? (
             <p className="text-muted mt-16">Aucun produit pour le moment.</p>
           ) : (
