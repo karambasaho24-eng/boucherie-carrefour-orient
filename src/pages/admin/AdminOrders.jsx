@@ -13,9 +13,18 @@ const STATUSES = [
   { value: 'confirmed', label: 'Confirmée',        color: '#0a0a0a' },
   { value: 'preparing', label: 'En préparation',   color: '#0a0a0a' },
   { value: 'ready',     label: 'Prête',            color: '#2f6b3a' },
+  { value: 'paid',      label: 'Payée',            color: '#2f6b3a' },
   { value: 'completed', label: 'Terminée',         color: '#6b6b68' },
+  { value: 'refused',   label: 'Refusée',          color: '#b5181f' },
   { value: 'cancelled', label: 'Annulée',          color: '#b5181f' },
 ]
+
+const PAYMENT_LABELS = {
+  unpaid: 'Non payé',
+  pending: 'Paiement en attente',
+  paid: 'Payé',
+  failed: 'Échoué',
+}
 
 const REFRESH_INTERVAL_MS = 15000
 
@@ -86,6 +95,9 @@ export default function AdminOrders() {
    * lorsque la commande passe de "pending" → "confirmed".
    */
   async function handleStatusChange(order, newStatus) {
+    if (order.payment_status === 'paid' && (newStatus === 'refused' || newStatus === 'cancelled')) {
+      if (!confirm('Cette commande est déjà payée. Voulez-vous vraiment changer son statut ?')) return
+    }
     try {
       const wasConfirmed = order.status !== 'confirmed' && newStatus === 'confirmed'
       await updateOrderStatus(order.id, newStatus)
@@ -209,6 +221,17 @@ export default function AdminOrders() {
                     </p>
                   )}
 
+                  <div className="payment-info">
+                    <span className={`payment-pill ${order.payment_status === 'paid' ? 'pill-paid' : ''}`}>
+                      {PAYMENT_LABELS[order.payment_status] || 'Non payé'}
+                    </span>
+                    {order.payment_method && (
+                      <span className="payment-pill">
+                        {order.payment_method === 'card' ? 'Carte' : 'Sur place'}
+                      </span>
+                    )}
+                  </div>
+
                   {/* Changement de statut */}
                   <div className="order-actions">
                     <div className="status-select-group">
@@ -290,6 +313,9 @@ export default function AdminOrders() {
         .order-item-line { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; }
         .mono { font-family: var(--font-mono); font-size: 12px; }
         .order-address { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 6px 0 14px; }
+        .payment-info { display: flex; gap: 6px; margin-bottom: 14px; }
+        .payment-pill { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 4px 10px; background: var(--color-paper); border: 1px solid var(--color-border); color: var(--color-text-muted); }
+        .pill-paid { color: #2f6b3a; border-color: rgba(47,107,58,0.3); background: rgba(47,107,58,0.08); }
 
         .order-actions { display: flex; flex-direction: column; gap: 12px; }
         .status-select-group { display: flex; flex-direction: column; gap: 8px; }
