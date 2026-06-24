@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { fetchOrderById, updateOrderItems, cancelOwnOrder, fetchSiteConfig } from '../lib/api'
+import { fetchOrderById, updateOrderItems, cancelOwnOrder, fetchSiteConfig, createCheckoutSession } from '../lib/api'
 import { clearActiveOrder } from '../components/OrderReminder'
 import Receipt from '../components/Receipt'
 
@@ -9,7 +9,9 @@ const STATUS_LABELS = {
   confirmed: 'Confirmée',
   preparing: 'En préparation',
   ready: 'Prête',
+  paid: 'Payée',
   completed: 'Terminée',
+  refused: 'Refusée',
   cancelled: 'Annulée',
 }
 
@@ -18,7 +20,9 @@ const STATUS_DESCRIPTIONS = {
   confirmed: 'Votre commande a été confirmée par la boucherie et est en cours de traitement.',
   preparing: 'La boucherie prépare actuellement votre commande.',
   ready: 'Votre commande est prête à être récupérée !',
+  paid: 'Votre paiement a bien été reçu. Merci !',
   completed: 'Cette commande a été terminée. Merci de votre confiance !',
+  refused: 'Cette commande a été refusée par la boucherie.',
   cancelled: 'Cette commande a été annulée.',
 }
 
@@ -32,10 +36,16 @@ export default function OrderStatus() {
   const [saving, setSaving] = useState(false)
   const [actionError, setActionError] = useState('')
   const [shopName, setShopName] = useState('Boucherie')
+  const [stripeEnabled, setStripeEnabled] = useState(false)
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState('')
 
   useEffect(() => {
     fetchSiteConfig()
-      .then((cfg) => setShopName(cfg?.site_title || 'Boucherie'))
+      .then((cfg) => {
+        setShopName(cfg?.site_title || 'Boucherie')
+        setStripeEnabled(cfg?.stripe_enabled ?? false)
+      })
       .catch(() => {})
   }, [])
 
@@ -104,6 +114,20 @@ export default function OrderStatus() {
       setActionError("Impossible d'annuler — la commande est peut-être déjà en cours de préparation.")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handlePay() {
+    setPaying(true)
+    setPayError('')
+    try {
+      const { url } = await createCheckoutSession(order.id)
+      window.location.href = url
+    } catch (err) {
+      console.error(err)
+      setPayError(err.message || 'Erreur lors de la création du paiement.')
+    } finally {
+      setPaying(false)
     }
   }
 
@@ -208,6 +232,28 @@ export default function OrderStatus() {
           <p style={{ margin: '4px 0 0' }}><strong>Téléphone :</strong> {order.phone}</p>
           {order.address && <p style={{ margin: '4px 0 0' }}><strong>Adresse :</strong> {order.address}</p>}
         </div>
+
+        {order.status === 'confirmed' && order.payment_status !== 'paid' && (
+          <div className="status-block">
+            <h3>Paiement</h3>
+            {stripeEnabled ? (
+              <>
+                <p className="text-muted" style={{ marginTop: 0 }}>
+                  Vous pouvez payer en ligne par carte ou directement sur place.
+                </p>
+                {payError && <p className="error-msg">{payError}</p>}
+                <button className="btn btn-primary btn-block" onClick={handlePay} disabled={paying}>
+                  {paying ? 'Redirection…' : 'Payer maintenant par carte'}
+                </button>
+                <p className="text-muted" style={{ marginTop: 10, fontSize: 12.5, textAlign: 'center' }}>
+                  ou réglez sur place lors du retrait/livraison
+                </p>
+              </>
+            ) : (
+              <p className="text-muted" style={{ margin: 0 }}>Paiement sur place lors du retrait/livraison.</p>
+            )}
+          </div>
+        )}
 
         <div className="status-block">
           <h3>Mon ticket</h3>
