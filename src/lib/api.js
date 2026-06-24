@@ -124,6 +124,17 @@ export async function deleteOrder(id) {
   if (error) throw error
 }
 
+// ---------- PAIEMENT STRIPE ----------
+
+export async function createCheckoutSession(orderId) {
+  const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+    body: { order_id: orderId },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data
+}
+
 // ---------- SITE CONFIG ----------
 
 export async function fetchSiteConfig() {
