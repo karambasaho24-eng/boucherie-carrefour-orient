@@ -52,6 +52,7 @@ export default function AdminConfig() {
         whatsapp_number: config.whatsapp_number,
         order_mode: config.order_mode,
         delivery_enabled: config.delivery_enabled ?? false,
+        stripe_enabled: config.stripe_enabled ?? false,
       })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
@@ -168,6 +169,32 @@ export default function AdminConfig() {
           </div>
           <div className={`delivery-status ${config.delivery_enabled ? 'status-on' : 'status-off'}`}>
             {config.delivery_enabled ? '🚚 Livraison activée' : '🏪 Retrait boutique uniquement'}
+          </div>
+        </div>
+
+        {/* Paiement Stripe */}
+        <div className="config-block">
+          <h4>Paiement en ligne</h4>
+          <div className="delivery-toggle-row">
+            <div className="delivery-toggle-info">
+              <p className="delivery-toggle-title">Activer le paiement par carte (Stripe)</p>
+              <p className="delivery-toggle-desc">
+                Lorsqu'activé, le client peut payer en ligne une commande confirmée, ou choisir de payer sur place.
+                Lorsque désactivé, seul le paiement sur place est proposé.
+              </p>
+            </div>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                name="stripe_enabled"
+                checked={config.stripe_enabled ?? false}
+                onChange={handleChange}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+          <div className={`delivery-status ${config.stripe_enabled ? 'status-on' : 'status-off'}`}>
+            {config.stripe_enabled ? '💳 Paiement carte activé' : '💶 Paiement sur place uniquement'}
           </div>
         </div>
       </div>
