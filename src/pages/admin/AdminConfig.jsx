@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchSiteConfig, updateSiteConfig, uploadSiteImage } from '../../lib/api'
 
+const THEME_COLORS = [
+  { id: 'red',    label: 'Rouge (signature)', swatch: '#b5181f' },
+  { id: 'green',  label: 'Vert',              swatch: '#1f7a3d' },
+  { id: 'blue',   label: 'Bleu',              swatch: '#1452b5' },
+  { id: 'gold',   label: 'Doré',              swatch: '#a87412' },
+  { id: 'purple', label: 'Violet',            swatch: '#6b2fb3' },
+  { id: 'teal',   label: 'Bleu canard',       swatch: '#0d7a72' },
+  { id: 'orange', label: 'Orange',            swatch: '#c2540c' },
+]
+
 export default function AdminConfig() {
   const [config, setConfig] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -51,6 +61,11 @@ export default function AdminConfig() {
     }
   }
 
+  function handleThemeChange(themeId) {
+    setConfig((c) => ({ ...c, theme_color: themeId }))
+    document.documentElement.setAttribute('data-color-theme', themeId)
+  }
+
   async function handleSave() {
     setSaving(true)
     setError('')
@@ -67,6 +82,7 @@ export default function AdminConfig() {
         logo_url: config.logo_url,
         about_title: config.about_title,
         about_text: config.about_text,
+        theme_color: config.theme_color,
         whatsapp_number: config.whatsapp_number,
         order_mode: config.order_mode,
         delivery_enabled: config.delivery_enabled ?? false,
@@ -177,6 +193,28 @@ export default function AdminConfig() {
           </div>
         </div>
 
+        {/* Thème de couleur */}
+        <div className="config-block">
+          <h4>Thème de couleur</h4>
+          <p className="text-muted" style={{ fontSize: 12.5, marginTop: -6, marginBottom: 14 }}>
+            Change la couleur d'accent du site (boutons, liens, badges). Compatible avec le mode sombre.
+          </p>
+          <div className="theme-swatches">
+            {THEME_COLORS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`theme-swatch-btn${(config.theme_color || 'red') === t.id ? ' active' : ''}`}
+                onClick={() => handleThemeChange(t.id)}
+                title={t.label}
+              >
+                <span className="theme-swatch-dot" style={{ background: t.swatch }} />
+                <span className="theme-swatch-label">{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Commande & WhatsApp */}
         <div className="config-block">
           <h4>Commande & WhatsApp</h4>
@@ -270,6 +308,12 @@ export default function AdminConfig() {
         @media (min-width: 1024px) { .config-grid { grid-template-columns: 1fr 1fr 1fr; } }
         .banner-preview { width: 100%; height: 140px; object-fit: cover; margin-bottom: 12px; border: 1px solid var(--color-border); }
         .logo-preview { width: 72px; height: 72px; object-fit: cover; margin-bottom: 12px; border: 1px solid var(--color-border); border-radius: 6px; }
+        .theme-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+        .theme-swatch-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--color-border); background: var(--color-paper-dim); transition: all 0.2s; }
+        .theme-swatch-btn:hover { border-color: var(--color-text-muted); }
+        .theme-swatch-btn.active { border-color: var(--color-text); background: var(--color-surface); box-shadow: inset 0 0 0 1px var(--color-text); }
+        .theme-swatch-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.12); }
+        .theme-swatch-label { font-size: 12px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
         .banner-delete-btn { margin-top: 8px; margin-left: 8px; }
         .whatsapp-preview { margin-top: 16px; background: var(--color-paper-dim); padding: 12px 14px; border: 1px solid var(--color-border); }
         .whatsapp-preview-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 8px; }
