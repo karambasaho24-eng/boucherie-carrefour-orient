@@ -1,18 +1,15 @@
-// ============================================================
-// src/pages/admin/AdminDashboard.jsx  (REMPLACEMENT COMPLET)
-// Dashboard admin avec onglet "Stocks" ajouté.
-// ============================================================
-
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
+import AdminDashboardStats from './AdminDashboardStats'
 import AdminProducts from './AdminProducts'
 import AdminOrders from './AdminOrders'
 import AdminConfig from './AdminConfig'
 import AdminStock from './AdminStock'
 
 const TABS = [
+  { id: 'dashboard', label: 'Tableau de bord' },
   { id: 'orders',   label: 'Commandes' },
   { id: 'products', label: 'Produits' },
   { id: 'stock',    label: 'Stocks' },
@@ -20,7 +17,7 @@ const TABS = [
 ]
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('orders')
+  const [tab, setTab] = useState('dashboard')
   const { profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
 
@@ -79,6 +76,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="admin-content">
+          {tab === 'dashboard' && <AdminDashboardStats />}
           {tab === 'orders'   && <AdminOrders />}
           {tab === 'products' && <AdminProducts />}
           {tab === 'stock'    && <AdminStock />}
