@@ -51,9 +51,23 @@ export async function updateProductStock(productId, updates) {
 /**
  * Décrémente le stock de tous les articles d'une commande (côté admin).
  * Appelle la fonction SQL qui gère l'atomicité.
+ * Sans effet si déjà décrémenté pour cette commande (protection SQL).
  */
 export async function decrementStockForOrder(orderId) {
   const { error } = await supabase.rpc('decrement_stock_for_order', {
+    p_order_id: orderId,
+  })
+  if (error) throw error
+}
+
+/**
+ * Restaure le stock d'une commande dont le stock avait été décrémenté
+ * (ex: la commande est repassée en "En attente" après avoir été confirmée,
+ * ou refusée/annulée après décrémentation).
+ * Sans effet si le stock n'avait pas été décrémenté pour cette commande.
+ */
+export async function restockOrder(orderId) {
+  const { error } = await supabase.rpc('restock_order', {
     p_order_id: orderId,
   })
   if (error) throw error
