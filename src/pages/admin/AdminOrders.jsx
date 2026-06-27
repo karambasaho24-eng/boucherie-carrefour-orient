@@ -1,7 +1,9 @@
 // ============================================================
 // src/pages/admin/AdminOrders.jsx  (REMPLACEMENT COMPLET)
 // Liste des commandes avec décrément de stock automatique
-// lorsqu'une commande passe en statut "confirmed".
+// lorsqu'une commande passe en statut "confirmed", et cohérence
+// automatique payment_status/payment_method lors des changements
+// manuels de statut par l'admin.
 // ============================================================
 
 import { useEffect, useRef, useState } from 'react'
@@ -91,16 +93,38 @@ export default function AdminOrders() {
   }, [])
 
   /**
-   * Changement de statut avec décrément de stock automatique
-   * lorsque la commande passe de "pending" → "confirmed".
+   * Changement de statut avec :
+   * - décrément de stock automatique lorsque la commande passe en "confirmed"
+   * - cohérence automatique payment_status/payment_method :
+   *     - passage manuel à "Payée" (paiement non-carte) → marque payment_status=paid,
+   *       payment_method=cash (sauf si déjà payée par carte, on ne touche à rien)
+   *     - retour en arrière d'une commande payée en espèces → remet payment_status=unpaid
+   * - confirmation supplémentaire si on tente de refuser/annuler une commande déjà
+   *   payée par carte (Stripe), pour éviter une erreur de manipulation.
    */
   async function handleStatusChange(order, newStatus) {
-    if (order.payment_status === 'paid' && (newStatus === 'refused' || newStatus === 'cancelled')) {
-      if (!confirm('Cette commande est déjà payée. Voulez-vous vraiment changer son statut ?')) return
+    if (order.payment_status === 'paid' && order.payment_method === 'card') {
+      if (newStatus === 'refused' || newStatus === 'cancelled') {
+        if (!confirm('Cette commande a été payée par CARTE (Stripe). Voulez-vous vraiment changer son statut ? Le remboursement éventuel doit être géré séparément sur Stripe.')) return
+      }
     }
+
+    const extraUpdates = {}
+    if (newStatus === 'paid' && order.payment_status !== 'paid') {
+      extraUpdates.payment_status = 'paid'
+      extraUpdates.payment_method = order.payment_method === 'card' ? 'card' : 'cash'
+      extraUpdates.paid_at = new Date().toISOString()
+    }
+    if (order.payment_status === 'paid' && order.payment_method !== 'card' &&
+        (newStatus === 'pending' || newStatus === 'confirmed' || newStatus === 'preparing' || newStatus === 'ready')) {
+      extraUpdates.payment_status = 'unpaid'
+      extraUpdates.payment_method = null
+      extraUpdates.paid_at = null
+    }
+
     try {
       const wasConfirmed = order.status !== 'confirmed' && newStatus === 'confirmed'
-      await updateOrderStatus(order.id, newStatus)
+      await updateOrderStatus(order.id, newStatus, extraUpdates)
 
       // Décrémenter le stock si la commande vient d'être confirmée
       if (wasConfirmed) {
@@ -113,7 +137,7 @@ export default function AdminOrders() {
       }
 
       setOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? { ...o, status: newStatus } : o))
+        prev.map((o) => (o.id === order.id ? { ...o, status: newStatus, ...extraUpdates } : o))
       )
     } catch (e) {
       alert('Erreur lors du changement de statut.')
