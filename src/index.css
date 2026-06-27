@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
-  /* ── Noir / Blanc / Rouge boucher : palette signature ── */
+  /* ── Palette signature par défaut (Noir / Blanc / Rouge) ── */
   --color-ink: #0a0a0a;
   --color-ink-soft: #1c1c1c;
   --color-paper: #faf9f6;
@@ -41,7 +41,40 @@
   --font-mono: 'Space Mono', 'Courier New', monospace;
 }
 
+/* ════════════════════════════════════════════════════════════
+   THÈMES DE COULEUR (choisis par l'admin dans Configuration)
+   Chaque thème ne redéfinit que --color-red (la couleur d'accent).
+   Le reste (noir/blanc, mode sombre) reste cohérent automatiquement.
+   ════════════════════════════════════════════════════════════ */
+[data-color-theme='red']    { --color-red: #b5181f; --color-red-deep: #8c1117; --color-red-light: #d94951; }
+[data-color-theme='green']  { --color-red: #1f7a3d; --color-red-deep: #155c2c; --color-red-light: #3fa362; }
+[data-color-theme='blue']   { --color-red: #1452b5; --color-red-deep: #0d3b85; --color-red-light: #3d76d6; }
+[data-color-theme='gold']   { --color-red: #a87412; --color-red-deep: #7d570d; --color-red-light: #cf9633; }
+[data-color-theme='purple'] { --color-red: #6b2fb3; --color-red-deep: #4f2186; --color-red-light: #8f57d6; }
+[data-color-theme='teal']   { --color-red: #0d7a72; --color-red-deep: #095852; --color-red-light: #2ea69c; }
+[data-color-theme='orange'] { --color-red: #c2540c; --color-red-deep: #903d09; --color-red-light: #e07b35; }
+/* Ces alias dérivés suivent automatiquement la teinte choisie */
+[data-color-theme] {
+  --color-accent: var(--color-red);
+  --color-accent-dark: var(--color-red-deep);
+  --color-accent-light: var(--color-red-light);
+  --color-danger: var(--color-red);
+}
+
+/* ════════════════════════════════════════════════════════════
+   MODE SOMBRE
+   --color-ink est la couleur "encre" utilisée comme fond plein
+   (boutons primaires, bandeaux, badges actifs...). En clair elle
+   est noire avec du texte clair par-dessus (--color-paper). En
+   sombre, on inverse --color-ink pour qu'elle devienne claire :
+   comme --color-paper devient noir, le couple reste cohérent et
+   tout texte/fond utilisant ces deux variables ensemble reste
+   lisible automatiquement, sans toucher aux composants.
+   ════════════════════════════════════════════════════════════ */
 [data-theme='dark'] {
+  --color-ink: #f2f1ee;
+  --color-ink-soft: #dadad6;
+
   --color-paper: #0a0a0a;
   --color-paper-dim: #141414;
   --color-surface: #141414;
