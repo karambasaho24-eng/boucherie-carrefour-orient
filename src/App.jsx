@@ -27,9 +27,18 @@ export default function App() {
     fetchSiteConfig().then(setConfig).catch(console.error)
   }, [])
 
+  // Applique le thème de couleur choisi par l'admin sur tout le site
+  // (le mode sombre/clair reste géré séparément par DarkModeToggle).
+  useEffect(() => {
+    if (config?.theme_color) {
+      document.documentElement.setAttribute('data-color-theme', config.theme_color)
+    }
+  }, [config?.theme_color])
+
   // Supabase Realtime : toute modification faite par l'admin (titre, logo,
-  // histoire, horaires, activation Stripe, etc.) se reflète instantanément
-  // sur le site public, sans que le visiteur ait besoin de recharger la page.
+  // histoire, horaires, activation Stripe, thème, etc.) se reflète
+  // instantanément sur le site public, sans que le visiteur ait besoin
+  // de recharger la page.
   useEffect(() => {
     const channel = supabase
       .channel('public-site-config-realtime')
