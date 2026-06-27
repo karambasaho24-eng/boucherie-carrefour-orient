@@ -96,30 +96,48 @@ export default function AdminOrders() {
    * Changement de statut avec :
    * - décrément de stock automatique lorsque la commande passe en "confirmed"
    * - cohérence automatique payment_status/payment_method :
-   *     - passage manuel à "Payée" (paiement non-carte) → marque payment_status=paid,
-   *       payment_method=cash (sauf si déjà payée par carte, on ne touche à rien)
-   *     - retour en arrière d'une commande payée en espèces → remet payment_status=unpaid
-   * - confirmation supplémentaire si on tente de refuser/annuler une commande déjà
-   *   payée par carte (Stripe), pour éviter une erreur de manipulation.
+   *     - passage manuel à "Payée" = paiement sur place (espèces/carte physique
+   *       en boutique), SAUF si déjà payé réellement en ligne via Stripe
+   *     - tout autre changement de statut réinitialise le paiement à "Non payé",
+   *       SAUF si la commande a été réellement payée en ligne via Stripe
+   *       (présence de stripe_payment_intent, rempli uniquement par le webhook
+   *       Stripe — jamais par une action manuelle admin). Dans ce cas, un message
+   *       d'avertissement s'affiche avant de pouvoir continuer.
    */
   async function handleStatusChange(order, newStatus) {
-    if (order.payment_status === 'paid' && order.payment_method === 'card') {
-      if (newStatus === 'refused' || newStatus === 'cancelled') {
-        if (!confirm('Cette commande a été payée par CARTE (Stripe). Voulez-vous vraiment changer son statut ? Le remboursement éventuel doit être géré séparément sur Stripe.')) return
-      }
+    // Un VRAI paiement en ligne Stripe est identifié par stripe_payment_intent
+    // (rempli uniquement par le webhook Stripe, jamais par une action manuelle admin).
+    const isRealOnlinePayment = order.payment_status === 'paid' && !!order.stripe_payment_intent
+
+    // On avertit avant de changer le statut d'une commande déjà réellement payée en ligne.
+    if (isRealOnlinePayment && newStatus !== 'paid') {
+      const proceed = confirm(
+        "⚠️ Ce client a payé EN LIGNE par carte (paiement Stripe confirmé).\n\n" +
+        "Changer le statut ne remboursera pas automatiquement le client — un remboursement doit être fait séparément sur le dashboard Stripe si nécessaire.\n\n" +
+        "Continuer quand même ?"
+      )
+      if (!proceed) return
     }
 
     const extraUpdates = {}
-    if (newStatus === 'paid' && order.payment_status !== 'paid') {
-      extraUpdates.payment_status = 'paid'
-      extraUpdates.payment_method = order.payment_method === 'card' ? 'card' : 'cash'
-      extraUpdates.paid_at = new Date().toISOString()
-    }
-    if (order.payment_status === 'paid' && order.payment_method !== 'card' &&
-        (newStatus === 'pending' || newStatus === 'confirmed' || newStatus === 'preparing' || newStatus === 'ready')) {
-      extraUpdates.payment_status = 'unpaid'
-      extraUpdates.payment_method = null
-      extraUpdates.paid_at = null
+
+    if (newStatus === 'paid') {
+      // Marquer "Payée" manuellement : on ne touche à rien si déjà payé en ligne,
+      // sinon on enregistre un paiement sur place (espèces/carte physique en boutique).
+      if (!isRealOnlinePayment) {
+        extraUpdates.payment_status = 'paid'
+        extraUpdates.payment_method = 'cash'
+        extraUpdates.paid_at = new Date().toISOString()
+      }
+    } else {
+      // Tout autre changement de statut réinitialise le paiement à "Non payé",
+      // SAUF s'il s'agit d'un vrai paiement Stripe en ligne (protégé ci-dessus,
+      // et qui reste affiché tel quel si l'admin a choisi de continuer malgré l'avertissement).
+      if (order.payment_status === 'paid' && !isRealOnlinePayment) {
+        extraUpdates.payment_status = 'unpaid'
+        extraUpdates.payment_method = null
+        extraUpdates.paid_at = null
+      }
     }
 
     try {
