@@ -9,6 +9,7 @@ export default function AdminConfig() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const bannerRef = useRef()
+  const logoRef = useRef()
 
   useEffect(() => {
     fetchSiteConfig()
@@ -36,6 +37,20 @@ export default function AdminConfig() {
     }
   }
 
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadSiteImage(file)
+      setConfig((c) => ({ ...c, logo_url: url }))
+    } catch {
+      setError('Erreur upload logo.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function handleSave() {
     setSaving(true)
     setError('')
@@ -49,6 +64,9 @@ export default function AdminConfig() {
         phone: config.phone,
         address: config.address,
         banner_image: config.banner_image,
+        logo_url: config.logo_url,
+        about_title: config.about_title,
+        about_text: config.about_text,
         whatsapp_number: config.whatsapp_number,
         order_mode: config.order_mode,
         delivery_enabled: config.delivery_enabled ?? false,
@@ -121,6 +139,42 @@ export default function AdminConfig() {
               Supprimer
             </button>
           )}
+        </div>
+
+        {/* Logo */}
+        <div className="config-block">
+          <h4>Logo du site</h4>
+          <p className="text-muted" style={{ fontSize: 12.5, marginTop: -6, marginBottom: 12 }}>
+            Affiché dans le bandeau en haut du site, à la place du symbole par défaut.
+          </p>
+          {config.logo_url && (
+            <img src={config.logo_url} alt="Logo" className="logo-preview" />
+          )}
+          <input ref={logoRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleLogoUpload} />
+          <button className="btn btn-ghost btn-sm" onClick={() => logoRef.current.click()} disabled={uploading}>
+            {uploading ? 'Upload…' : 'Choisir un logo'}
+          </button>
+          {config.logo_url && (
+            <button className="btn btn-danger btn-sm banner-delete-btn" onClick={() => setConfig((c) => ({ ...c, logo_url: '' }))}>
+              Supprimer
+            </button>
+          )}
+        </div>
+
+        {/* Notre histoire */}
+        <div className="config-block">
+          <h4>Notre histoire</h4>
+          <p className="text-muted" style={{ fontSize: 12.5, marginTop: -6, marginBottom: 12 }}>
+            Affiché sur la page d'accueil, dans la section sombre dédiée à votre histoire.
+          </p>
+          <div className="field">
+            <label>Titre de la section</label>
+            <input className="input" name="about_title" value={config.about_title || ''} onChange={handleChange} placeholder="Notre histoire" />
+          </div>
+          <div className="field">
+            <label>Texte</label>
+            <textarea className="textarea" name="about_text" rows={5} value={config.about_text || ''} onChange={handleChange} />
+          </div>
         </div>
 
         {/* Commande & WhatsApp */}
@@ -215,12 +269,12 @@ export default function AdminConfig() {
         @media (min-width: 768px) { .config-grid { grid-template-columns: 1fr 1fr; } }
         @media (min-width: 1024px) { .config-grid { grid-template-columns: 1fr 1fr 1fr; } }
         .banner-preview { width: 100%; height: 140px; object-fit: cover; margin-bottom: 12px; border: 1px solid var(--color-border); }
+        .logo-preview { width: 72px; height: 72px; object-fit: cover; margin-bottom: 12px; border: 1px solid var(--color-border); border-radius: 6px; }
         .banner-delete-btn { margin-top: 8px; margin-left: 8px; }
         .whatsapp-preview { margin-top: 16px; background: var(--color-paper-dim); padding: 12px 14px; border: 1px solid var(--color-border); }
         .whatsapp-preview-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 8px; }
         .whatsapp-preview-text { font-family: var(--font-mono); font-size: 12px; white-space: pre-wrap; margin: 0; color: var(--color-text); line-height: 1.6; }
 
-        /* Livraison toggle */
         .delivery-toggle-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
         .delivery-toggle-info { flex: 1; }
         .delivery-toggle-title { font-weight: 600; font-size: 13.5px; margin: 0 0 4px; color: var(--color-text); }
