@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchOrderById, updateOrderItems, cancelOwnOrder, fetchSiteConfig, createCheckoutSession } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 import { clearActiveOrder } from '../components/OrderReminder'
 import Receipt from '../components/Receipt'
 
@@ -66,6 +67,29 @@ export default function OrderStatus() {
   }
 
   useEffect(() => { load() }, [id])
+
+  // Supabase Realtime : écoute les changements sur CETTE commande précise,
+  // pour que le statut (confirmation, paiement, etc.) se mette à jour
+  // instantanément côté client sans recharger la page.
+  useEffect(() => {
+    if (!id) return
+    const channel = supabase
+      .channel(`order-status-${id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${id}` },
+        (payload) => {
+          const updated = payload.new
+          setOrder((prev) => (prev ? { ...prev, ...updated } : updated))
+          if (updated.status === 'completed' || updated.status === 'cancelled') {
+            clearActiveOrder()
+          }
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [id])
 
   function startEditing() {
     setEditItems(order.items.map((i) => ({ ...i })))
