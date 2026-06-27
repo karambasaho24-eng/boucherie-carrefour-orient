@@ -6,13 +6,12 @@ function LogoTitle({ title }) {
   const text = title || "Carrefour d'Orient"
   const idx = text.indexOf("Orient")
 
-  // Si le mot "Orient" n'est pas trouvé, on affiche le texte tel quel (pas de SVG nécessaire)
   if (idx === -1) {
     return <span className="navbar-logo-name">{text}</span>
   }
 
-  const before = text.slice(0, idx)       // "Carrefour d'"
-  const after = text.slice(idx + 1)        // "rient" (sans le "O")
+  const before = text.slice(0, idx)
+  const after = text.slice(idx + 1)
 
   return (
     <span className="navbar-logo-name navbar-logo-name-svg">
@@ -31,7 +30,7 @@ function LogoTitle({ title }) {
   )
 }
 
-export default function Navbar({ siteTitle }) {
+export default function Navbar({ siteTitle, logoUrl }) {
   const { count } = useCart()
 
   return (
@@ -39,11 +38,15 @@ export default function Navbar({ siteTitle }) {
       <div className="container navbar-inner">
         <Link to="/" className="navbar-logo">
           <span className="navbar-mark" aria-hidden="true">
-            <svg viewBox="0 0 40 40" width="36" height="36">
-              <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
-              <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
-              <circle cx="20" cy="3.5" r="1.6" fill="currentColor" />
-            </svg>
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="navbar-mark-img" />
+            ) : (
+              <svg viewBox="0 0 40 40" width="36" height="36">
+                <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
+                <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
+                <circle cx="20" cy="3.5" r="1.6" fill="currentColor" />
+              </svg>
+            )}
           </span>
           <div className="navbar-logo-text">
             <LogoTitle title={siteTitle} />
@@ -97,6 +100,12 @@ export default function Navbar({ siteTitle }) {
           color: var(--color-ink);
           flex-shrink: 0;
           display: flex;
+        }
+        .navbar-mark-img {
+          width: 36px;
+          height: 36px;
+          object-fit: cover;
+          border-radius: 4px;
         }
         .navbar-logo-text {
           display: flex;
@@ -216,4 +225,3 @@ export default function Navbar({ siteTitle }) {
     </header>
   )
 }
-
