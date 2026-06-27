@@ -1,6 +1,5 @@
 // ============================================================
 // src/lib/api.js  (REMPLACEMENT COMPLET)
-// Fonctions Supabase — version avec gestion des stocks
 // ============================================================
 
 import { supabase } from './supabaseClient'
@@ -16,11 +15,6 @@ export async function fetchProducts() {
   return data
 }
 
-/**
- * Produits visibles côté client :
- * - Tout sauf "disabled"
- * - (Out of stock est affiché avec badge, pas masqué)
- */
 export async function fetchAvailableProducts() {
   const { data, error } = await supabase
     .from('products')
@@ -28,7 +22,6 @@ export async function fetchAvailableProducts() {
     .neq('availability_mode', 'disabled')
     .order('created_at', { ascending: false })
   if (error) {
-    // Rétrocompatibilité si la colonne n'existe pas encore (avant migration v5)
     const { data: fallback, error: e2 } = await supabase
       .from('products')
       .select('*')
@@ -137,6 +130,43 @@ export async function createCheckoutSession(orderId) {
   })
   if (error) throw error
   if (data?.error) throw new Error(data.error)
+  return data
+}
+
+// ---------- DASHBOARD ----------
+
+export async function fetchDashboardStats() {
+  const { data, error } = await supabase.from('v_dashboard_stats').select('*').single()
+  if (error) throw error
+  return data
+}
+
+export async function fetchTopProducts(limit = 10) {
+  const { data, error } = await supabase
+    .from('v_top_products')
+    .select('*')
+    .order('total_qty_kg', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data
+}
+
+export async function fetchRevenueByDay() {
+  const { data, error } = await supabase
+    .from('v_revenue_by_day')
+    .select('*')
+    .order('day', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function fetchTopCustomers(limit = 10) {
+  const { data, error } = await supabase
+    .from('v_top_customers')
+    .select('*')
+    .order('total_spent', { ascending: false })
+    .limit(limit)
+  if (error) throw error
   return data
 }
 
