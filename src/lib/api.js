@@ -83,8 +83,13 @@ export async function fetchOrders() {
   return data
 }
 
-export async function updateOrderStatus(id, status) {
-  const { data, error } = await supabase.from('orders').update({ status }).eq('id', id).select().single()
+export async function updateOrderStatus(id, status, extraUpdates = {}) {
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ status, ...extraUpdates })
+    .eq('id', id)
+    .select()
+    .single()
   if (error) throw error
   return data
 }
