@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { CartProvider } from './hooks/useCart'
 import { AuthProvider } from './hooks/useAuth'
 import { fetchSiteConfig } from './lib/api'
+import { supabase } from './lib/supabaseClient'
 
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -24,6 +25,22 @@ export default function App() {
 
   useEffect(() => {
     fetchSiteConfig().then(setConfig).catch(console.error)
+  }, [])
+
+  // Supabase Realtime : toute modification faite par l'admin (titre, logo,
+  // histoire, horaires, activation Stripe, etc.) se reflète instantanément
+  // sur le site public, sans que le visiteur ait besoin de recharger la page.
+  useEffect(() => {
+    const channel = supabase
+      .channel('public-site-config-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'site_config', filter: 'id=eq.1' },
+        (payload) => setConfig((prev) => ({ ...prev, ...payload.new }))
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   return (
@@ -48,7 +65,7 @@ export default function App() {
               element={
                 <>
                   <OrderReminder />
-                  <Navbar siteTitle={config?.site_title} />
+                  <Navbar siteTitle={config?.site_title} logoUrl={config?.logo_url} />
                   <main className="main-content">
                     <Routes>
                       <Route path="/" element={<Home config={config} />} />
