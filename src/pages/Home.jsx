@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchAvailableProducts } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard'
 
 function useReveal(deps = []) {
@@ -14,11 +15,6 @@ function useReveal(deps = []) {
     )
     els.forEach(el => obs.observe(el))
 
-    // Filet de sécurité : si un élément .reveal n'a jamais déclenché
-    // l'observer (élément déjà hors-écran au montage, hauteur nulle au
-    // moment de l'observation, contenu injecté après coup, etc.), on le
-    // rend visible quand même après un court délai pour éviter qu'il
-    // reste bloqué en opacity:0 indéfiniment.
     const fallback = setTimeout(() => {
       document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible'))
     }, 1500)
@@ -79,9 +75,6 @@ export default function Home({ config }) {
   useEffect(() => {
     let cancelled = false
 
-    // Filet de sécurité : si la requête ne se résout jamais (souci réseau,
-    // configuration Supabase manquante, etc.), on arrête quand même le
-    // chargement après 8s au lieu de laisser le skeleton tourner à l'infini.
     const safetyTimer = setTimeout(() => {
       if (!cancelled) {
         setLoadError('Le chargement prend trop de temps. Vérifiez la connexion à la base de données.')
@@ -93,8 +86,6 @@ export default function Home({ config }) {
       .then((data) => {
         if (cancelled) return
         const featured = data.filter((p) => p.is_featured)
-        // Si l'admin n'a marqué aucun produit comme vedette, on affiche les plus
-        // récents pour que la section ne soit jamais vide sur un site neuf
         setProducts(featured.length > 0 ? featured.slice(0, 6) : data.slice(0, 6))
       })
       .catch((err) => {
@@ -112,6 +103,28 @@ export default function Home({ config }) {
       cancelled = true
       clearTimeout(safetyTimer)
     }
+  }, [])
+
+  // Supabase Realtime : met à jour les produits affichés en direct
+  // (stock, disponibilité, mise en vedette) sans recharger la page.
+  useEffect(() => {
+    const channel = supabase
+      .channel('home-products-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        () => {
+          fetchAvailableProducts()
+            .then((data) => {
+              const featured = data.filter((p) => p.is_featured)
+              setProducts(featured.length > 0 ? featured.slice(0, 6) : data.slice(0, 6))
+            })
+            .catch(() => {})
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   const phoneClean = (config?.phone || '0243410951').replace(/\s/g, '')
@@ -269,17 +282,16 @@ export default function Home({ config }) {
         </div>
       </section>
 
-      {/* ── AMBIANCE STRIP (inversion noir) ── */}
+      {/* ── AMBIANCE STRIP (inversion noir) — "Notre histoire" éditable ── */}
       <section className="ambiance-section">
         <div className="ambiance-grain" />
         <div className="container ambiance-content">
           <div className="reveal">
             <div className="section-label section-label-light">Depuis toujours</div>
-            <h2 className="ambiance-title">La boucherie de votre quartier</h2>
+            <h2 className="ambiance-title">{config?.about_title || 'Notre histoire'}</h2>
             <p className="ambiance-text">
-              Installée au cœur des Sablons au Mans, la Boucherie Carrefour d'Orient vous accueille chaque jour
-              avec des produits frais, une découpe soignée et le sourire. Notre passion&nbsp;: vous offrir la
-              meilleure viande halal au meilleur prix.
+              {config?.about_text ||
+                "Installée au cœur des Sablons au Mans, la Boucherie Carrefour d'Orient vous accueille chaque jour avec des produits frais, une découpe soignée et le sourire. Notre passion : vous offrir la meilleure viande halal au meilleur prix."}
             </p>
             <a href={`tel:${phoneClean}`} className="btn btn-outline" style={{ marginTop: 28 }}>
               Nous appeler
@@ -317,7 +329,6 @@ export default function Home({ config }) {
       <style>{`
         .home-page { overflow-x: clip; }
 
-        /* ════════ HERO ════════ */
         .hero {
           position: relative;
           background: var(--color-ink);
@@ -481,7 +492,6 @@ export default function Home({ config }) {
           100% { transform: translateY(30px); opacity: 0; }
         }
 
-        /* ════════ INFO STRIP ════════ */
         .info-strip {
           background: var(--color-paper);
           border-bottom: 1px solid var(--color-border);
@@ -508,7 +518,6 @@ export default function Home({ config }) {
         .info-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-text-muted); margin-bottom: 4px; }
         .info-value { font-size: 15px; font-weight: 600; }
 
-        /* ════════ SECTION HEAD ════════ */
         .section-head { margin-bottom: 44px; }
         .section-title {
           font-family: var(--font-display);
@@ -520,7 +529,6 @@ export default function Home({ config }) {
           letter-spacing: -0.5px;
         }
 
-        /* ════════ PILLARS ════════ */
         .pillars-section { padding: 90px 0; background: var(--color-paper); }
         .pillars-grid {
           display: grid;
@@ -551,7 +559,6 @@ export default function Home({ config }) {
         }
         .pillar-desc { font-size: 14px; color: var(--color-text-muted); margin: 0; line-height: 1.65; max-width: 480px; }
 
-        /* ════════ PRODUCTS ════════ */
         .products-section { padding: 90px 0; background: var(--color-paper-dim); }
         .products-header {
           display: flex;
@@ -570,7 +577,6 @@ export default function Home({ config }) {
           background: var(--color-border);
         }
 
-        /* ════════ AMBIANCE (noir) ════════ */
         .ambiance-section {
           position: relative;
           background: var(--color-ink);
@@ -595,7 +601,6 @@ export default function Home({ config }) {
         }
         .ambiance-text { font-size: 16px; color: rgba(250,249,246,0.65); line-height: 1.8; margin: 0; }
 
-        /* ════════ SPECIALTIES ════════ */
         .specialties-section { padding: 90px 0 110px; background: var(--color-paper); }
         .specialties-grid {
           display: grid;
@@ -619,7 +624,6 @@ export default function Home({ config }) {
         .specialty-label { font-family: var(--font-heading); font-size: 17px; font-weight: 700; }
         .specialty-desc { font-size: 12.5px; color: var(--color-text-muted); }
 
-        /* ════════ RESPONSIVE ════════ */
         @media (min-width: 640px) {
           .hero-actions { flex-direction: row; gap: 28px; }
           .hero-badges-row { display: flex; }
