@@ -27,37 +27,128 @@ function StatCard({ label, value, sub, accent }) {
   )
 }
 
-/** Petit graphique en barres SVG fait main, sans dépendance externe. */
 function RevenueChart({ data }) {
+  const [mode, setMode] = useState('bars')
+  const [hovered, setHovered] = useState(null)
+
   if (!data || data.length === 0) {
     return <p className="text-muted" style={{ fontSize: 13 }}>Pas encore de données de paiement sur les 30 derniers jours.</p>
   }
-  const max = Math.max(...data.map((d) => Number(d.revenue)), 1)
-  const width = 700
-  const height = 160
-  const barGap = 6
-  const rawWidth = (width / data.length) - barGap
-  const barWidth = Math.min(Math.max(rawWidth, 4), 48)
-  const totalContentWidth = data.length * (barWidth + barGap) - barGap
-  const offsetX = Math.max((width - totalContentWidth) / 2, 0)
+
+  const width = 760
+  const height = 240
+  const padLeft = 56
+  const padBottom = 26
+  const padTop = 14
+  const plotW = width - padLeft - 10
+  const plotH = height - padTop - padBottom
+
+  const maxRevenue = Math.max(...data.map((d) => Number(d.revenue)), 1)
+  const niceMax = (() => {
+    const raw = maxRevenue * 1.15
+    const magnitude = Math.pow(10, Math.floor(Math.log10(raw || 1)))
+    const steps = [1, 2, 2.5, 5, 10]
+    for (const s of steps) {
+      if (raw <= s * magnitude) return s * magnitude
+    }
+    return 10 * magnitude
+  })()
+  const ySteps = 4
+  const yLabels = Array.from({ length: ySteps + 1 }, (_, i) => Math.round((niceMax / ySteps) * i))
+
+  function xFor(i) {
+    if (data.length === 1) return padLeft + plotW / 2
+    return padLeft + (i / (data.length - 1)) * plotW
+  }
+  function yFor(value) {
+    return padTop + plotH - (value / niceMax) * plotH
+  }
+
+  const barSlot = plotW / data.length
+  const barWidth = Math.min(Math.max(barSlot - 8, 4), 40)
+
+  const linePoints = data.map((d, i) => `${xFor(i)},${yFor(Number(d.revenue))}`).join(' ')
+  const areaPoints = `${padLeft},${padTop + plotH} ${linePoints} ${padLeft + plotW},${padTop + plotH}`
+
+  const labelStride = Math.ceil(data.length / 8)
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="revenue-chart" preserveAspectRatio="xMidYMid meet">
-      {data.map((d, i) => {
-        const h = Math.max((Number(d.revenue) / max) * (height - 24), 2)
-        const x = offsetX + i * (barWidth + barGap)
-        const y = height - h - 18
-        const dateLabel = new Date(d.day).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-        return (
-          <g key={d.day}>
-            <rect x={x} y={y} width={barWidth} height={h} className="revenue-bar">
-              <title>{dateLabel} — {formatEUR(d.revenue)} ({d.orders_count} commande{d.orders_count > 1 ? 's' : ''})</title>
-            </rect>
+    <div className="revenue-chart-wrap">
+      <div className="chart-toggle">
+        <button className={`chart-toggle-btn${mode === 'bars' ? ' active' : ''}`} onClick={() => setMode('bars')}>Barres</button>
+        <button className={`chart-toggle-btn${mode === 'line' ? ' active' : ''}`} onClick={() => setMode('line')}>Courbe</button>
+      </div>
+
+      <svg viewBox={`0 0 ${width} ${height}`} className="revenue-chart" preserveAspectRatio="xMidYMid meet">
+        {yLabels.map((val, i) => {
+          const y = yFor(val)
+          return (
+            <g key={i}>
+              <line x1={padLeft} y1={y} x2={width - 10} y2={y} className="grid-line" />
+              <text x={padLeft - 8} y={y + 3} textAnchor="end" className="axis-label">
+                {val >= 1000 ? `${Math.round(val / 100) / 10}k€` : `${val}€`}
+              </text>
+            </g>
+          )
+        })}
+
+        {mode === 'bars' ? (
+          data.map((d, i) => {
+            const x = xFor(i) - barWidth / 2
+            const y = yFor(Number(d.revenue))
+            const h = padTop + plotH - y
+            return (
+              <rect
+                key={d.day}
+                x={x} y={y} width={barWidth} height={Math.max(h, 1.5)}
+                className={`revenue-bar${hovered === i ? ' hovered' : ''}`}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+              />
+            )
+          })
+        ) : (
+          <>
+            <polygon points={areaPoints} className="revenue-area" />
+            <polyline points={linePoints} className="revenue-line" />
+            {data.map((d, i) => (
+              <circle
+                key={d.day}
+                cx={xFor(i)} cy={yFor(Number(d.revenue))} r={hovered === i ? 5 : 3}
+                className="revenue-dot"
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+              />
+            ))}
+          </>
+        )}
+
+        <line x1={padLeft} y1={padTop + plotH} x2={width - 10} y2={padTop + plotH} className="revenue-axis" />
+        {data.map((d, i) => {
+          if (i % labelStride !== 0 && i !== data.length - 1) return null
+          const dateLabel = new Date(d.day).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+          return (
+            <text key={d.day} x={xFor(i)} y={height - 6} textAnchor="middle" className="axis-label-x">
+              {dateLabel}
+            </text>
+          )
+        })}
+
+        {hovered !== null && (
+          <g>
+            <line x1={xFor(hovered)} y1={padTop} x2={xFor(hovered)} y2={padTop + plotH} className="hover-line" />
           </g>
-        )
-      })}
-      <line x1="0" y1={height - 18} x2={width} y2={height - 18} className="revenue-axis" />
-    </svg>
+        )}
+      </svg>
+
+      {hovered !== null && (
+        <div className="chart-tooltip" style={{ left: `${(xFor(hovered) / width) * 100}%` }}>
+          <strong>{formatEUR(data[hovered].revenue)}</strong>
+          <span>{new Date(data[hovered].day).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' })}</span>
+          <span className="text-muted">{data[hovered].orders_count} commande{data[hovered].orders_count > 1 ? 's' : ''}</span>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -215,9 +306,40 @@ export default function AdminDashboardStats() {
 
         .dash-columns { display: grid; grid-template-columns: 1fr; gap: 20px; }
 
-        .revenue-chart { width: 100%; height: 160px; display: block; }
-        .revenue-bar { fill: var(--color-ink); }
+        .revenue-chart-wrap { position: relative; }
+        .chart-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+        .chart-toggle-btn { padding: 6px 14px; font-size: 11.5px; font-weight: 600; border: 1px solid var(--color-border); background: var(--color-paper-dim); color: var(--color-text-muted); transition: all 0.2s; }
+        .chart-toggle-btn:hover { color: var(--color-text); }
+        .chart-toggle-btn.active { background: var(--color-ink); color: var(--color-paper); border-color: var(--color-ink); }
+        .revenue-chart { width: 100%; height: 240px; display: block; overflow: visible; }
+        .grid-line { stroke: var(--color-border); stroke-width: 1; }
+        .axis-label { font-family: var(--font-mono); font-size: 10px; fill: var(--color-text-muted); }
+        .axis-label-x { font-family: var(--font-mono); font-size: 9.5px; fill: var(--color-text-muted); }
+        .revenue-bar { fill: var(--color-ink); opacity: 0.85; transition: opacity 0.15s; cursor: pointer; }
+        .revenue-bar.hovered { opacity: 1; fill: var(--color-red); }
+        .revenue-area { fill: var(--color-red); opacity: 0.08; }
+        .revenue-line { fill: none; stroke: var(--color-red); stroke-width: 2; }
+        .revenue-dot { fill: var(--color-surface); stroke: var(--color-red); stroke-width: 2; cursor: pointer; transition: r 0.15s; }
         .revenue-axis { stroke: var(--color-border); stroke-width: 1; }
+        .hover-line { stroke: var(--color-text-muted); stroke-width: 1; stroke-dasharray: 3 3; pointer-events: none; }
+        .chart-tooltip {
+          position: absolute;
+          top: 6px;
+          transform: translateX(-50%);
+          background: var(--color-ink);
+          color: var(--color-paper);
+          padding: 8px 12px;
+          font-size: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          pointer-events: none;
+          white-space: nowrap;
+          z-index: 2;
+          box-shadow: var(--shadow-lg);
+        }
+        .chart-tooltip strong { font-family: var(--font-mono); font-size: 13px; }
+        .chart-tooltip .text-muted { color: rgba(250,249,246,0.55); font-size: 10.5px; }
 
         .dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .dash-table th { text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--color-text-muted); padding: 0 8px 10px 0; border-bottom: 1px solid var(--color-border); }
