@@ -1,5 +1,5 @@
 // ============================================================
-// src/pages/admin/AdminDashboardStats.jsx  (NOUVEAU FICHIER)
+// src/pages/admin/AdminDashboardStats.jsx  (REMPLACEMENT COMPLET)
 // Tableau de bord : chiffre d'affaires, commandes, clients,
 // produits les plus vendus, état des stocks.
 // ============================================================
@@ -27,6 +27,7 @@ function StatCard({ label, value, sub, accent }) {
   )
 }
 
+/** Petit graphique en barres SVG fait main, sans dépendance externe. */
 function RevenueChart({ data }) {
   if (!data || data.length === 0) {
     return <p className="text-muted" style={{ fontSize: 13 }}>Pas encore de données de paiement sur les 30 derniers jours.</p>
@@ -34,14 +35,17 @@ function RevenueChart({ data }) {
   const max = Math.max(...data.map((d) => Number(d.revenue)), 1)
   const width = 700
   const height = 160
-  const barGap = 3
-  const barWidth = data.length > 0 ? Math.max((width / data.length) - barGap, 4) : 4
+  const barGap = 6
+  const rawWidth = (width / data.length) - barGap
+  const barWidth = Math.min(Math.max(rawWidth, 4), 48)
+  const totalContentWidth = data.length * (barWidth + barGap) - barGap
+  const offsetX = Math.max((width - totalContentWidth) / 2, 0)
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="revenue-chart" preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${width} ${height}`} className="revenue-chart" preserveAspectRatio="xMidYMid meet">
       {data.map((d, i) => {
         const h = Math.max((Number(d.revenue) / max) * (height - 24), 2)
-        const x = i * (barWidth + barGap)
+        const x = offsetX + i * (barWidth + barGap)
         const y = height - h - 18
         const dateLabel = new Date(d.day).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
         return (
