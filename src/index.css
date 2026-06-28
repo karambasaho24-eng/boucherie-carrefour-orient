@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
-  /* ── Palette signature par défaut (Noir / Blanc / Rouge) ── */
   --color-ink: #0a0a0a;
   --color-ink-soft: #1c1c1c;
   --color-paper: #faf9f6;
@@ -14,7 +13,12 @@
   --color-red: #b5181f;
   --color-red-deep: #8c1117;
 
-  /* legacy aliases used across existing components */
+  --color-ink-fixed: #0a0a0a;
+  --color-ink-fixed-soft: #1c1c1c;
+  --color-on-ink-fixed: #faf9f6;
+  --color-on-ink-fixed-dim: rgba(250,249,246,0.6);
+  --color-on-ink-fixed-dim-2: rgba(250,249,246,0.45);
+
   --color-primary: var(--color-ink);
   --color-primary-light: var(--color-ink-soft);
   --color-primary-deep: #000000;
@@ -41,19 +45,46 @@
   --font-mono: 'Space Mono', 'Courier New', monospace;
 }
 
-/* ════════════════════════════════════════════════════════════
-   THÈMES DE COULEUR (choisis par l'admin dans Configuration)
-   Chaque thème ne redéfinit que --color-red (la couleur d'accent).
-   Le reste (noir/blanc, mode sombre) reste cohérent automatiquement.
-   ════════════════════════════════════════════════════════════ */
-[data-color-theme='red']    { --color-red: #b5181f; --color-red-deep: #8c1117; --color-red-light: #d94951; }
-[data-color-theme='green']  { --color-red: #1f7a3d; --color-red-deep: #155c2c; --color-red-light: #3fa362; }
-[data-color-theme='blue']   { --color-red: #1452b5; --color-red-deep: #0d3b85; --color-red-light: #3d76d6; }
-[data-color-theme='gold']   { --color-red: #a87412; --color-red-deep: #7d570d; --color-red-light: #cf9633; }
-[data-color-theme='purple'] { --color-red: #6b2fb3; --color-red-deep: #4f2186; --color-red-light: #8f57d6; }
-[data-color-theme='teal']   { --color-red: #0d7a72; --color-red-deep: #095852; --color-red-light: #2ea69c; }
-[data-color-theme='orange'] { --color-red: #c2540c; --color-red-deep: #903d09; --color-red-light: #e07b35; }
-/* Ces alias dérivés suivent automatiquement la teinte choisie */
+[data-color-theme='red'] {
+  --color-red: #b5181f; --color-red-deep: #8c1117; --color-red-light: #d94951;
+  --color-ink-fixed: #1a0506; --color-ink-fixed-soft: #2e0c0e;
+}
+[data-color-theme='green'] {
+  --color-red: #1f7a3d; --color-red-deep: #155c2c; --color-red-light: #3fa362;
+  --color-ink-fixed: #06150a; --color-ink-fixed-soft: #0e2615;
+}
+[data-color-theme='blue'] {
+  --color-red: #1452b5; --color-red-deep: #0d3b85; --color-red-light: #3d76d6;
+  --color-ink-fixed: #050d1f; --color-ink-fixed-soft: #0c1a35;
+}
+[data-color-theme='gold'] {
+  --color-red: #a87412; --color-red-deep: #7d570d; --color-red-light: #cf9633;
+  --color-ink-fixed: #1a1106; --color-ink-fixed-soft: #2e1e0c;
+}
+[data-color-theme='purple'] {
+  --color-red: #6b2fb3; --color-red-deep: #4f2186; --color-red-light: #8f57d6;
+  --color-ink-fixed: #140622; --color-ink-fixed-soft: #240f3b;
+}
+[data-color-theme='teal'] {
+  --color-red: #0d7a72; --color-red-deep: #095852; --color-red-light: #2ea69c;
+  --color-ink-fixed: #04181a; --color-ink-fixed-soft: #0a2b2d;
+}
+[data-color-theme='orange'] {
+  --color-red: #c2540c; --color-red-deep: #903d09; --color-red-light: #e07b35;
+  --color-ink-fixed: #1f0d04; --color-ink-fixed-soft: #361a0c;
+}
+[data-color-theme='rose'] {
+  --color-red: #c21d6e; --color-red-deep: #8f1551; --color-red-light: #e0539a;
+  --color-ink-fixed: #1f0512; --color-ink-fixed-soft: #360c20;
+}
+[data-color-theme='slate'] {
+  --color-red: #3d5a73; --color-red-deep: #2a3f52; --color-red-light: #5f87a3;
+  --color-ink-fixed: #0a1015; --color-ink-fixed-soft: #161f27;
+}
+[data-color-theme='terracotta'] {
+  --color-red: #b4502f; --color-red-deep: #863a21; --color-red-light: #d47a55;
+  --color-ink-fixed: #1c0d06; --color-ink-fixed-soft: #321a0e;
+}
 [data-color-theme] {
   --color-accent: var(--color-red);
   --color-accent-dark: var(--color-red-deep);
@@ -61,16 +92,6 @@
   --color-danger: var(--color-red);
 }
 
-/* ════════════════════════════════════════════════════════════
-   MODE SOMBRE
-   --color-ink est la couleur "encre" utilisée comme fond plein
-   (boutons primaires, bandeaux, badges actifs...). En clair elle
-   est noire avec du texte clair par-dessus (--color-paper). En
-   sombre, on inverse --color-ink pour qu'elle devienne claire :
-   comme --color-paper devient noir, le couple reste cohérent et
-   tout texte/fond utilisant ces deux variables ensemble reste
-   lisible automatiquement, sans toucher aux composants.
-   ════════════════════════════════════════════════════════════ */
 [data-theme='dark'] {
   --color-ink: #f2f1ee;
   --color-ink-soft: #dadad6;
@@ -125,7 +146,6 @@ button { font-family: inherit; cursor: pointer; }
   min-height: calc(100vh - var(--header-height));
 }
 
-/* ── Buttons : carrés, hairline, inversion au survol ── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -187,7 +207,6 @@ button { font-family: inherit; cursor: pointer; }
 .btn:active { transform: scale(0.98); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
-/* ── Inputs ── */
 .input, .textarea, .select {
   width: 100%;
   padding: 14px 16px;
@@ -206,7 +225,6 @@ button { font-family: inherit; cursor: pointer; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
 .field label { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--color-text-muted); }
 
-/* ── Card ── */
 .card {
   background: var(--color-surface);
   border-radius: var(--radius);
@@ -214,7 +232,6 @@ button { font-family: inherit; cursor: pointer; }
   border: 1px solid var(--color-border);
 }
 
-/* ── Badge ── */
 .badge {
   display: inline-block;
   padding: 4px 12px;
@@ -231,7 +248,6 @@ button { font-family: inherit; cursor: pointer; }
 }
 .badge-status { background: var(--color-border); color: var(--color-text); }
 
-/* ── Utilities ── */
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .items-center { align-items: center; }
@@ -246,7 +262,6 @@ button { font-family: inherit; cursor: pointer; }
 .text-muted { color: var(--color-text-muted); }
 .text-center { text-align: center; }
 
-/* ── Skeleton ── */
 .skeleton {
   background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
   background-size: 200% 100%;
@@ -258,7 +273,6 @@ button { font-family: inherit; cursor: pointer; }
   100% { background-position: -200% 0; }
 }
 
-/* ── Scroll reveal ── */
 .reveal {
   opacity: 0;
   transform: translateY(36px);
@@ -279,7 +293,6 @@ button { font-family: inherit; cursor: pointer; }
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 
-/* ── Section label : étiquette d'atelier ── */
 .section-label {
   display: inline-flex;
   align-items: center;
