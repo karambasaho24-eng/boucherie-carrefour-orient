@@ -105,8 +105,6 @@ export default function Home({ config }) {
     }
   }, [])
 
-  // Supabase Realtime : met à jour les produits affichés en direct
-  // (stock, disponibilité, mise en vedette) sans recharger la page.
   useEffect(() => {
     const channel = supabase
       .channel('home-products-realtime')
@@ -282,7 +280,7 @@ export default function Home({ config }) {
         </div>
       </section>
 
-      {/* ── AMBIANCE STRIP (inversion noir) — "Notre histoire" éditable ── */}
+      {/* ── AMBIANCE STRIP (bandeau toujours sombre, teinté par le thème) — "Notre histoire" éditable ── */}
       <section className="ambiance-section">
         <div className="ambiance-grain" />
         <div className="container ambiance-content">
@@ -331,13 +329,13 @@ export default function Home({ config }) {
 
         .hero {
           position: relative;
-          background: var(--color-ink);
+          background: var(--color-ink-fixed);
           min-height: 100vh;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           overflow: hidden;
-          color: var(--color-paper);
+          color: var(--color-on-ink-fixed);
           padding: 28px 0 32px;
         }
         .hero-grain {
@@ -368,7 +366,7 @@ export default function Home({ config }) {
           font-size: 10px;
           letter-spacing: 1.5px;
           text-transform: uppercase;
-          color: rgba(250,249,246,0.45);
+          color: var(--color-on-ink-fixed-dim-2);
         }
         .hero-eyebrow-right { text-align: right; }
 
@@ -389,7 +387,7 @@ export default function Home({ config }) {
           right: 6px;
           width: 84px;
           height: 84px;
-          color: rgba(250,249,246,0.5);
+          color: var(--color-on-ink-fixed-dim);
           animation: stampSpin 38s linear infinite;
           display: none;
         }
@@ -415,7 +413,7 @@ export default function Home({ config }) {
           font-size: clamp(54px, 16vw, 150px);
           line-height: 0.86;
           letter-spacing: -1px;
-          color: var(--color-paper);
+          color: var(--color-on-ink-fixed);
           transform: translate(calc(var(--mx, 0) * -6px), calc(var(--my, 0) * -4px));
           transition: transform 0.2s ease-out;
         }
@@ -423,18 +421,20 @@ export default function Home({ config }) {
         .hero-title-rule {
           width: 64px;
           height: 1px;
-          background: rgba(250,249,246,0.35);
+          background: var(--color-on-ink-fixed-dim-2);
+          opacity: 0.8;
         }
         .hero-title-sub {
           font-family: var(--font-display);
           font-style: italic;
           font-weight: 500;
           font-size: clamp(17px, 3vw, 23px);
-          color: rgba(250,249,246,0.85);
+          color: var(--color-on-ink-fixed);
+          opacity: 0.85;
         }
         .hero-subtitle {
           font-size: 15px;
-          color: rgba(250,249,246,0.6);
+          color: var(--color-on-ink-fixed-dim);
           max-width: 440px;
           margin: 0;
           line-height: 1.7;
@@ -446,8 +446,8 @@ export default function Home({ config }) {
           align-items: center;
           margin-top: 6px;
         }
-        .hero-btn-main { border-color: var(--color-paper); background: var(--color-paper); color: var(--color-ink); }
-        .hero-btn-main:hover { background: transparent; color: var(--color-paper); }
+        .hero-btn-main { border-color: var(--color-on-ink-fixed); background: var(--color-on-ink-fixed); color: var(--color-ink-fixed); }
+        .hero-btn-main:hover { background: transparent; color: var(--color-on-ink-fixed); }
         .hero-call {
           display: inline-flex;
           align-items: center;
@@ -455,10 +455,11 @@ export default function Home({ config }) {
           font-family: var(--font-mono);
           font-size: 13px;
           letter-spacing: 0.5px;
-          color: rgba(250,249,246,0.75);
+          color: var(--color-on-ink-fixed-dim);
+          opacity: 0.95;
           transition: color 0.2s;
         }
-        .hero-call:hover { color: var(--color-paper); }
+        .hero-call:hover { color: var(--color-on-ink-fixed); }
         .hero-call-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-red); flex-shrink: 0; }
 
         .hero-bottomline { align-items: center; }
@@ -472,7 +473,7 @@ export default function Home({ config }) {
         .hero-scroll-track {
           width: 1px;
           height: 30px;
-          background: rgba(250,249,246,0.25);
+          background: var(--color-on-ink-fixed-dim-2);
           position: relative;
           overflow: hidden;
         }
@@ -579,7 +580,7 @@ export default function Home({ config }) {
 
         .ambiance-section {
           position: relative;
-          background: var(--color-ink);
+          background: var(--color-ink-fixed);
           padding: 100px 0;
           overflow: hidden;
         }
@@ -588,8 +589,8 @@ export default function Home({ config }) {
           inset: 0;
           background-image: radial-gradient(circle at 70% 20%, rgba(255,255,255,0.04), transparent 50%);
         }
-        .ambiance-content { position: relative; z-index: 1; color: var(--color-paper); max-width: 640px; }
-        .section-label-light { color: rgba(250,249,246,0.5); }
+        .ambiance-content { position: relative; z-index: 1; color: var(--color-on-ink-fixed); max-width: 640px; }
+        .section-label-light { color: var(--color-on-ink-fixed-dim-2); }
         .section-label-light::before { background: var(--color-red); }
         .ambiance-title {
           font-family: var(--font-display);
@@ -599,7 +600,7 @@ export default function Home({ config }) {
           line-height: 1.15;
           letter-spacing: -0.5px;
         }
-        .ambiance-text { font-size: 16px; color: rgba(250,249,246,0.65); line-height: 1.8; margin: 0; }
+        .ambiance-text { font-size: 16px; color: var(--color-on-ink-fixed-dim); opacity: 0.9; line-height: 1.8; margin: 0; }
 
         .specialties-section { padding: 90px 0 110px; background: var(--color-paper); }
         .specialties-grid {
