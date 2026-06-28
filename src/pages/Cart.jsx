@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+    import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
 import { createOrder } from '../lib/api'
@@ -21,7 +21,7 @@ function isValidPhone(phone) {
   return /^(\+33|0)[1-9](\d{8})$/.test(cleaned)
 }
 
-function buildWhatsAppMessage({ orderId, form, items, total, deliveryEnabled }) {
+function buildWhatsAppMessage({ orderId, fullOrderId, form, items, total, deliveryEnabled }) {
   const lines = [
     `Commande #${orderId}`,
     `${form.customer_name}`,
@@ -32,6 +32,9 @@ function buildWhatsAppMessage({ orderId, form, items, total, deliveryEnabled }) 
     ``,
     `Total : ${total.toFixed(2)} €`,
   ]
+  if (fullOrderId) {
+    lines.push(``, `Suivre ma commande et payer en ligne :`, `${window.location.origin}/commande/${fullOrderId}`)
+  }
   return lines.filter((l) => l !== null).join('\n')
 }
 
@@ -48,7 +51,6 @@ export default function Cart({ config }) {
   const showSiteButton = orderMode === 'site' || orderMode === 'both'
   const showWhatsAppButton = (orderMode === 'whatsapp' || orderMode === 'both') && !!whatsappNumber
 
-  // Livraison activée ou non par l'admin
   const deliveryEnabled = config?.delivery_enabled ?? false
 
   useEffect(() => {
@@ -119,6 +121,7 @@ export default function Cart({ config }) {
 
     setError(''); setSuccess(''); setLoading(true)
     let orderId = Date.now().toString(36).toUpperCase()
+    let fullOrderId = null
 
     try {
       const orderData = {
@@ -131,13 +134,14 @@ export default function Cart({ config }) {
       }
       const created = await createOrder(orderData)
       orderId = created.id.slice(0, 8).toUpperCase()
+      fullOrderId = created.id
       rememberCustomer()
       rememberActiveOrder(created.id)
     } catch (err) {
       console.error(err)
     }
 
-    const message = buildWhatsAppMessage({ orderId, form, items, total, deliveryEnabled })
+    const message = buildWhatsAppMessage({ orderId, fullOrderId, form, items, total, deliveryEnabled })
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank')
     clearCart()
     setSuccess('Commande envoyée sur WhatsApp !')
@@ -241,7 +245,6 @@ export default function Cart({ config }) {
                 <input className="input" name="phone" value={form.phone} onChange={handleField} placeholder="06 XX XX XX XX" type="tel" />
               </div>
 
-              {/* Champ adresse — visible seulement si livraison activée */}
               {deliveryEnabled ? (
                 <div className="field">
                   <label>Adresse de livraison *</label>
