@@ -1,6 +1,6 @@
 // ============================================================
 // supabase/functions/create-checkout-session/index.ts
-// Crée une session Stripe Checkout pour une commande confirmée.
+// Lit les clés Stripe depuis site_config (plus depuis les secrets)
 // ============================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import Stripe from 'https://esm.sh/stripe@16?target=deno'
@@ -9,11 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
-  apiVersion: '2024-06-20',
-  httpClient: Stripe.createFetchHttpClient(),
-})
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -25,60 +20,57 @@ Deno.serve(async (req) => {
 
   try {
     const { order_id } = await req.json()
-    if (!order_id) {
-      return json({ error: 'order_id manquant' }, 400)
-    }
+    if (!order_id) return json({ error: 'order_id manquant' }, 400)
 
-    // 1. Vérifier que Stripe est activé par l'admin
     const { data: config, error: configErr } = await supabase
       .from('site_config')
-      .select('stripe_enabled')
+      .select('stripe_enabled, stripe_secret_key, stripe_mode')
       .eq('id', 1)
       .single()
+
     if (configErr) return json({ error: 'Configuration introuvable' }, 500)
-    if (!config.stripe_enabled) {
-      return json({ error: 'Le paiement par carte est désactivé.' }, 403)
+    if (!config.stripe_enabled) return json({ error: 'Le paiement par carte est désactivé.' }, 403)
+
+    const secretKey = config.stripe_secret_key?.trim()
+    if (!secretKey) {
+      return json({ error: 'Clé Stripe non configurée. Contactez le gérant.' }, 500)
     }
 
-    // 2. Récupérer la commande
+    const stripe = new Stripe(secretKey, {
+      apiVersion: '2024-06-20',
+      httpClient: Stripe.createFetchHttpClient(),
+    })
+
     const { data: order, error: orderErr } = await supabase
       .from('orders')
       .select('*')
       .eq('id', order_id)
       .single()
-    if (orderErr || !order) {
-      return json({ error: 'Commande introuvable' }, 404)
-    }
 
-    // 3. Vérifications de sécurité métier
-    if (order.status === 'refused') {
-      return json({ error: 'Cette commande a été refusée.' }, 400)
-    }
-    if (order.status === 'cancelled') {
-      return json({ error: 'Cette commande a été annulée.' }, 400)
-    }
-    if (order.payment_status === 'paid') {
-      return json({ error: 'Cette commande est déjà payée.' }, 400)
-    }
-    if (order.status !== 'confirmed') {
-      return json({ error: "La commande doit être confirmée par la boucherie avant paiement." }, 400)
-    }
+    if (orderErr || !order) return json({ error: 'Commande introuvable' }, 404)
 
-    // 4. Empêcher la création de plusieurs sessions simultanées :
-    //    si une session existe déjà et n'est pas expirée, on la réutilise.
+    if (order.status === 'refused')      return json({ error: 'Cette commande a été refusée.' }, 400)
+    if (order.status === 'cancelled')    return json({ error: 'Cette commande a été annulée.' }, 400)
+    if (order.payment_status === 'paid') return json({ error: 'Cette commande est déjà payée.' }, 400)
+    if (order.status !== 'confirmed')    return json({ error: 'La commande doit être confirmée avant paiement.' }, 400)
+
     if (order.stripe_session_id) {
       try {
         const existing = await stripe.checkout.sessions.retrieve(order.stripe_session_id)
         if (existing.status === 'open' && existing.url) {
           return json({ url: existing.url })
         }
-      } catch {
-        // session introuvable ou expirée -> on en recrée une
-      }
+      } catch { /* session expirée, on en recrée une */ }
     }
 
-    const siteUrl = Deno.env.get('SITE_URL') ?? ''
-    const items = order.items || []
+    const { data: fullConfig } = await supabase
+      .from('site_config')
+      .select('site_url')
+      .eq('id', 1)
+      .single()
+
+    const siteUrl = fullConfig?.site_url?.trim() || Deno.env.get('SITE_URL') || ''
+    const items   = order.items || []
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -89,12 +81,11 @@ Deno.serve(async (req) => {
           unit_amount: Math.round(i.price * 100),
           product_data: { name: `${i.name} (${i.qty} kg)` },
         },
-        quantity: 1, // le prix unitaire ci-dessus correspond déjà à price * qty
+        quantity: 1,
       })),
-      customer_email: undefined,
       metadata: { order_id: order.id },
       success_url: `${siteUrl}/commande/${order.id}?paiement=succes`,
-      cancel_url: `${siteUrl}/commande/${order.id}?paiement=annule`,
+      cancel_url:  `${siteUrl}/commande/${order.id}?paiement=annule`,
     })
 
     await supabase
@@ -103,6 +94,7 @@ Deno.serve(async (req) => {
       .eq('id', order.id)
 
     return json({ url: session.url })
+
   } catch (err) {
     console.error(err)
     return json({ error: 'Erreur serveur lors de la création du paiement.' }, 500)
