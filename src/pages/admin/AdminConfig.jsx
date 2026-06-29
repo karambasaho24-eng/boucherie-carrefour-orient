@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { fetchSiteConfig, updateSiteConfig, uploadSiteImage } from '../../lib/api'
 
 const THEME_COLORS = [
-  { id: 'red',        label: 'Rouge (signature)', swatch: '#b5181f' },
+  { id: 'original',   label: 'Original (noir/blanc/rouge)', swatch: '#0a0a0a' },
+  { id: 'red',        label: 'Rouge',             swatch: '#b5181f' },
   { id: 'green',      label: 'Vert',              swatch: '#1f7a3d' },
   { id: 'blue',       label: 'Bleu',              swatch: '#1452b5' },
   { id: 'gold',       label: 'Doré',              swatch: '#a87412' },
@@ -66,7 +67,14 @@ export default function AdminConfig() {
 
   function handleThemeChange(themeId) {
     setConfig((c) => ({ ...c, theme_color: themeId }))
-    document.documentElement.setAttribute('data-color-theme', themeId)
+    // Aperçu immédiat, avant même la sauvegarde.
+    // "original" retire l'attribut pour revenir aux valeurs par défaut
+    // (noir/blanc/rouge) définies dans :root.
+    if (themeId === 'original') {
+      document.documentElement.removeAttribute('data-color-theme')
+    } else {
+      document.documentElement.setAttribute('data-color-theme', themeId)
+    }
   }
 
   async function handleSave() {
@@ -201,7 +209,7 @@ export default function AdminConfig() {
               <button
                 key={t.id}
                 type="button"
-                className={`theme-swatch-btn${(config.theme_color || 'red') === t.id ? ' active' : ''}`}
+                className={`theme-swatch-btn${(config.theme_color || 'original') === t.id ? ' active' : ''}`}
                 onClick={() => handleThemeChange(t.id)}
                 title={t.label}
               >
