@@ -97,7 +97,11 @@ export default function AdminConfig() {
         whatsapp_number: config.whatsapp_number,
         order_mode: config.order_mode,
         delivery_enabled: config.delivery_enabled ?? false,
-        stripe_enabled: config.stripe_enabled ?? false,
+        stripe_enabled:         config.stripe_enabled ?? false,
+        stripe_secret_key:      config.stripe_secret_key ?? '',
+        stripe_publishable_key: config.stripe_publishable_key ?? '',
+        stripe_webhook_secret:  config.stripe_webhook_secret ?? '',
+        stripe_mode:            config.stripe_mode ?? 'test',
       })
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
@@ -290,6 +294,100 @@ export default function AdminConfig() {
             {config.stripe_enabled ? '💳 Paiement carte activé' : '💶 Paiement sur place uniquement'}
           </div>
         </div>
+
+        {/* ---- CONFIGURATION STRIPE ---- */}
+        <div className="config-block stripe-block">
+          <h4>🔑 Clés Stripe</h4>
+          <p className="stripe-intro">
+            Ces clés se trouvent sur <strong>dashboard.stripe.com</strong> → Développeurs → Clés API.<br />
+            Utilisez les clés <em>Test</em> pour vos essais, puis les clés <em>Live</em> pour les vrais paiements.
+          </p>
+
+          <div className="field">
+            <label>Mode</label>
+            <div className="stripe-mode-toggle">
+              <button
+                className={`stripe-mode-btn${(config.stripe_mode ?? 'test') === 'test' ? ' active' : ''}`}
+                onClick={() => setConfig(c => ({ ...c, stripe_mode: 'test' }))}
+                type="button"
+              >🧪 Test</button>
+              <button
+                className={`stripe-mode-btn${(config.stripe_mode ?? 'test') === 'live' ? ' active live' : ''}`}
+                onClick={() => setConfig(c => ({ ...c, stripe_mode: 'live' }))}
+                type="button"
+              >🟢 Live (production)</button>
+            </div>
+          </div>
+
+          <div className="field">
+            <label>Clé secrète {config.stripe_mode === 'live' ? '(sk_live_…)' : '(sk_test_…)'}</label>
+            <div className="stripe-key-wrap">
+              <input
+                className="input stripe-key-input"
+                type="password"
+                name="stripe_secret_key"
+                value={config.stripe_secret_key ?? ''}
+                onChange={handleChange}
+                placeholder={config.stripe_mode === 'live' ? 'sk_live_…' : 'sk_test_…'}
+                autoComplete="off"
+              />
+              {config.stripe_secret_key && (
+                <span className="stripe-key-status ok">✓</span>
+              )}
+            </div>
+            <span className="field-hint">Stripe → Développeurs → Clés API → Clé secrète</span>
+          </div>
+
+          <div className="field">
+            <label>Clé publique {config.stripe_mode === 'live' ? '(pk_live_…)' : '(pk_test_…)'}</label>
+            <div className="stripe-key-wrap">
+              <input
+                className="input stripe-key-input"
+                type="text"
+                name="stripe_publishable_key"
+                value={config.stripe_publishable_key ?? ''}
+                onChange={handleChange}
+                placeholder={config.stripe_mode === 'live' ? 'pk_live_…' : 'pk_test_…'}
+                autoComplete="off"
+              />
+              {config.stripe_publishable_key && (
+                <span className="stripe-key-status ok">✓</span>
+              )}
+            </div>
+            <span className="field-hint">Stripe → Développeurs → Clés API → Clé publiable</span>
+          </div>
+
+          <div className="field">
+            <label>Secret webhook (whsec_…)</label>
+            <div className="stripe-key-wrap">
+              <input
+                className="input stripe-key-input"
+                type="password"
+                name="stripe_webhook_secret"
+                value={config.stripe_webhook_secret ?? ''}
+                onChange={handleChange}
+                placeholder="whsec_…"
+                autoComplete="off"
+              />
+              {config.stripe_webhook_secret && (
+                <span className="stripe-key-status ok">✓</span>
+              )}
+            </div>
+            <span className="field-hint">Stripe → Développeurs → Webhooks → Signing secret</span>
+          </div>
+
+          <div className="stripe-help-box">
+            <p className="stripe-help-title">📋 Comment configurer le webhook ?</p>
+            <ol className="stripe-help-steps">
+              <li>Va sur <strong>dashboard.stripe.com</strong> → Développeurs → Webhooks</li>
+              <li>Clique <strong>Ajouter un endpoint</strong></li>
+              <li>URL : <code className="stripe-code">{window.location.origin.replace('admin','')}/functions/v1/stripe-webhook</code></li>
+              <li>Événements à écouter : <code className="stripe-code">checkout.session.completed</code> et <code className="stripe-code">checkout.session.expired</code></li>
+              <li>Copie le <strong>Signing secret</strong> (whsec_…) et colle-le ci-dessus</li>
+            </ol>
+          </div>
+        </div>
+
       </div>
 
       {error && <p className="config-error">{error}</p>}
@@ -337,6 +435,24 @@ export default function AdminConfig() {
         .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
         .field label { font-size: 11px; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.8px; color: var(--color-text-muted); }
         .config-error { color: var(--color-red); margin-top: 16px; font-size: 13px; }
+
+        /* Stripe */
+        .stripe-block { grid-column: 1 / -1; }
+        .stripe-intro { font-size: 12.5px; color: var(--color-text-muted); margin: -6px 0 18px; line-height: 1.55; }
+        .stripe-mode-toggle { display: flex; gap: 0; border: 1px solid var(--color-border); width: fit-content; margin-bottom: 4px; }
+        .stripe-mode-btn { padding: 8px 18px; font-size: 12px; font-weight: 700; border: none; background: var(--color-paper-dim); color: var(--color-text-muted); cursor: pointer; transition: all 0.2s; }
+        .stripe-mode-btn.active { background: var(--color-ink); color: var(--color-paper); }
+        .stripe-mode-btn.active.live { background: #1a5c2a; }
+        .stripe-key-wrap { display: flex; align-items: center; gap: 8px; }
+        .stripe-key-input { flex: 1; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.5px; }
+        .stripe-key-status { font-size: 16px; }
+        .stripe-key-status.ok { color: #2f6b3a; }
+        .field-hint { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+        .stripe-help-box { margin-top: 20px; background: var(--color-paper-dim); border: 1px solid var(--color-border); padding: 16px 18px; }
+        .stripe-help-title { font-weight: 700; font-size: 13px; margin: 0 0 10px; }
+        .stripe-help-steps { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--color-text-muted); line-height: 1.5; }
+        .stripe-help-steps strong { color: var(--color-text); }
+        .stripe-code { font-family: var(--font-mono); font-size: 11px; background: var(--color-border); padding: 1px 5px; }
         .config-success { color: #2f6b3a; margin-top: 16px; font-size: 13px; font-weight: 600; }
         .config-save-btn { margin-top: 24px; }
         .btn-danger { background: var(--color-red); color: #fff; border-color: var(--color-red); }
