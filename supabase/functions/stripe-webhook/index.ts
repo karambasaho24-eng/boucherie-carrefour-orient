@@ -1,16 +1,9 @@
 // ============================================================
 // supabase/functions/stripe-webhook/index.ts
-// Seule source de vérité pour la confirmation de paiement.
+// Lit le webhook secret depuis site_config
 // ============================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import Stripe from 'https://esm.sh/stripe@16?target=deno'
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
-  apiVersion: '2024-06-20',
-  httpClient: Stripe.createFetchHttpClient(),
-})
-
-const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? ''
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -19,11 +12,31 @@ const supabase = createClient(
 
 Deno.serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
-  const body = await req.text()
+  const body      = await req.text()
+
+  const { data: config, error: configErr } = await supabase
+    .from('site_config')
+    .select('stripe_secret_key, stripe_webhook_secret')
+    .eq('id', 1)
+    .single()
+
+  if (configErr || !config?.stripe_secret_key || !config?.stripe_webhook_secret) {
+    console.error('Clés Stripe manquantes dans site_config')
+    return new Response('Configuration manquante', { status: 500 })
+  }
+
+  const stripe = new Stripe(config.stripe_secret_key.trim(), {
+    apiVersion: '2024-06-20',
+    httpClient: Stripe.createFetchHttpClient(),
+  })
 
   let event: Stripe.Event
   try {
-    event = await stripe.webhooks.constructEventAsync(body, signature ?? '', webhookSecret)
+    event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature ?? '',
+      config.stripe_webhook_secret.trim()
+    )
   } catch (err) {
     console.error('Signature webhook invalide', err)
     return new Response('Signature invalide', { status: 400 })
@@ -44,7 +57,7 @@ Deno.serve(async (req) => {
           paid_at: new Date().toISOString(),
         })
         .eq('id', orderId)
-        .neq('payment_status', 'paid') // idempotence : pas de double traitement
+        .neq('payment_status', 'paid')
       if (error) console.error('Erreur mise à jour commande:', error)
     }
   }
