@@ -29,8 +29,12 @@ export default function App() {
 
   // Applique le thème de couleur choisi par l'admin sur tout le site
   // (le mode sombre/clair reste géré séparément par DarkModeToggle).
+  // "original" retire l'attribut pour revenir aux valeurs par défaut
+  // (noir/blanc/rouge) définies dans :root.
   useEffect(() => {
-    if (config?.theme_color) {
+    if (!config?.theme_color || config.theme_color === 'original') {
+      document.documentElement.removeAttribute('data-color-theme')
+    } else {
       document.documentElement.setAttribute('data-color-theme', config.theme_color)
     }
   }, [config?.theme_color])
