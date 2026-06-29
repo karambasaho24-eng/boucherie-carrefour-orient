@@ -201,15 +201,26 @@ function RevenueChart({ data }) {
         ))}
 
         <line x1={padLeft} y1={padTop + plotH} x2={width - 10} y2={padTop + plotH} className="revenue-axis" />
-        {data.map((d, i) => {
-          if (i % labelStride !== 0 && i !== data.length - 1) return null
-          const dateLabel = new Date(d.day).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-          return (
-            <text key={d.day} x={xFor(i)} y={height - 6} textAnchor="middle" className="axis-label-x">
-              {dateLabel}
-            </text>
-          )
-        })}
+        {(() => {
+          // Distance minimale en pixels entre deux labels pour éviter la superposition
+          const MIN_PX = 38
+          let lastX = -Infinity
+          return data.map((d, i) => {
+            const x = xFor(i)
+            // Toujours afficher le premier label
+            if (i !== 0 && x - lastX < MIN_PX) return null
+            // Ne pas afficher si trop proche de la fin (évite superposition avec le dernier)
+            const distToEnd = xFor(data.length - 1) - x
+            if (i !== data.length - 1 && distToEnd > 0 && distToEnd < MIN_PX) return null
+            lastX = x
+            const dateLabel = new Date(d.day).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+            return (
+              <text key={d.day} x={x} y={height - 6} textAnchor="middle" className="axis-label-x">
+                {dateLabel}
+              </text>
+            )
+          })
+        })()}
 
         {hovered !== null && (
           <line x1={xFor(hovered)} y1={padTop} x2={xFor(hovered)} y2={padTop + plotH} className="hover-line" />
