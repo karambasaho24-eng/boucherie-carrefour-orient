@@ -1,7 +1,3 @@
-// ============================================================
-// src/lib/api.js  (REMPLACEMENT COMPLET)
-// ============================================================
-
 import { supabase } from './supabaseClient'
 
 // ---------- PRODUCTS ----------
@@ -134,7 +130,6 @@ export async function createCheckoutSession(orderId) {
 }
 
 // ---------- DASHBOARD (paramétré par période) ----------
-// start/end au format 'YYYY-MM-DD'
 
 export async function fetchDashboardStats(start, end) {
   const { data, error } = await supabase.rpc('dashboard_stats', { p_start: start, p_end: end })
@@ -176,6 +171,48 @@ export async function fetchOrdersByHour(start, end) {
   const { data, error } = await supabase.rpc('orders_by_hour', { p_start: start, p_end: end })
   if (error) throw error
   return data
+}
+
+// ---------- SNAPSHOTS DE PERFORMANCE ----------
+
+export async function saveSnapshot({ title, description, periodStart, periodEnd, data }) {
+  const { data: row, error } = await supabase
+    .from('dashboard_snapshots')
+    .insert({
+      title,
+      description: description || null,
+      period_start: periodStart,
+      period_end: periodEnd,
+      data,
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return row
+}
+
+export async function fetchSnapshots() {
+  const { data, error } = await supabase
+    .from('dashboard_snapshots')
+    .select('id, title, description, period_start, period_end, created_at')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function fetchSnapshotById(id) {
+  const { data, error } = await supabase
+    .from('dashboard_snapshots')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteSnapshot(id) {
+  const { error } = await supabase.from('dashboard_snapshots').delete().eq('id', id)
+  if (error) throw error
 }
 
 // ---------- SITE CONFIG ----------
