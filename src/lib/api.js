@@ -133,39 +133,47 @@ export async function createCheckoutSession(orderId) {
   return data
 }
 
-// ---------- DASHBOARD ----------
+// ---------- DASHBOARD (paramétré par période) ----------
+// start/end au format 'YYYY-MM-DD'
 
-export async function fetchDashboardStats() {
-  const { data, error } = await supabase.from('v_dashboard_stats').select('*').single()
+export async function fetchDashboardStats(start, end) {
+  const { data, error } = await supabase.rpc('dashboard_stats', { p_start: start, p_end: end })
+  if (error) throw error
+  return data?.[0] || null
+}
+
+export async function fetchTopProducts(start, end, limit = 10) {
+  const { data, error } = await supabase.rpc('top_products', { p_start: start, p_end: end, p_limit: limit })
   if (error) throw error
   return data
 }
 
-export async function fetchTopProducts(limit = 10) {
-  const { data, error } = await supabase
-    .from('v_top_products')
-    .select('*')
-    .order('total_qty_kg', { ascending: false })
-    .limit(limit)
+export async function fetchRevenueByDay(start, end) {
+  const { data, error } = await supabase.rpc('revenue_by_day', { p_start: start, p_end: end })
   if (error) throw error
   return data
 }
 
-export async function fetchRevenueByDay() {
-  const { data, error } = await supabase
-    .from('v_revenue_by_day')
-    .select('*')
-    .order('day', { ascending: true })
+export async function fetchTopCustomers(start, end, limit = 10) {
+  const { data, error } = await supabase.rpc('top_customers', { p_start: start, p_end: end, p_limit: limit })
   if (error) throw error
   return data
 }
 
-export async function fetchTopCustomers(limit = 10) {
-  const { data, error } = await supabase
-    .from('v_top_customers')
-    .select('*')
-    .order('total_spent', { ascending: false })
-    .limit(limit)
+export async function fetchRevenueByCategory(start, end) {
+  const { data, error } = await supabase.rpc('revenue_by_category', { p_start: start, p_end: end })
+  if (error) throw error
+  return data
+}
+
+export async function fetchOrdersByWeekday(start, end) {
+  const { data, error } = await supabase.rpc('orders_by_weekday', { p_start: start, p_end: end })
+  if (error) throw error
+  return data
+}
+
+export async function fetchOrdersByHour(start, end) {
+  const { data, error } = await supabase.rpc('orders_by_hour', { p_start: start, p_end: end })
   if (error) throw error
   return data
 }
