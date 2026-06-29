@@ -1,8 +1,14 @@
+// ============================================================
+// src/pages/admin/AdminDashboard.jsx  (REMPLACEMENT COMPLET)
+// Dashboard admin avec onglets "Performances" et "Stocks".
+// ============================================================
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
 import AdminDashboardStats from './AdminDashboardStats'
+import AdminSnapshots from './AdminSnapshots'
 import AdminProducts from './AdminProducts'
 import AdminOrders from './AdminOrders'
 import AdminConfig from './AdminConfig'
@@ -10,6 +16,7 @@ import AdminStock from './AdminStock'
 
 const TABS = [
   { id: 'dashboard', label: 'Tableau de bord' },
+  { id: 'snapshots', label: 'Performances' },
   { id: 'orders',   label: 'Commandes' },
   { id: 'products', label: 'Produits' },
   { id: 'stock',    label: 'Stocks' },
@@ -77,6 +84,7 @@ export default function AdminDashboard() {
 
         <div className="admin-content">
           {tab === 'dashboard' && <AdminDashboardStats />}
+          {tab === 'snapshots' && <AdminSnapshots />}
           {tab === 'orders'   && <AdminOrders />}
           {tab === 'products' && <AdminProducts />}
           {tab === 'stock'    && <AdminStock />}
