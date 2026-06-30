@@ -30,15 +30,7 @@ function LogoTitle({ title }) {
   )
 }
 
-const BUSINESS_LABELS = {
-  boucherie:    'Boucherie · Halal',
-  poissonnerie: 'Poissonnerie',
-  epicerie:     'Épicerie · Halal',
-  restaurant:   'Restaurant',
-  autre:        '',
-}
-
-export default function Navbar({ siteTitle, logoUrl, businessType }) {
+export default function Navbar({ siteTitle, logoUrl }) {
   const { count } = useCart()
 
   return (
@@ -58,9 +50,7 @@ export default function Navbar({ siteTitle, logoUrl, businessType }) {
           </span>
           <div className="navbar-logo-text">
             <LogoTitle title={siteTitle} />
-            {(BUSINESS_LABELS[businessType] ?? BUSINESS_LABELS.boucherie) && (
-              <span className="navbar-logo-sub">{BUSINESS_LABELS[businessType] ?? BUSINESS_LABELS.boucherie}</span>
-            )}
+            <span className="navbar-logo-sub">Boucherie · Halal</span>
           </div>
         </Link>
 
@@ -83,155 +73,30 @@ export default function Navbar({ siteTitle, logoUrl, businessType }) {
       </div>
 
       <style>{`
-        .navbar {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          background: var(--color-surface);
-          border-bottom: 1px solid var(--color-border);
-          height: var(--header-height);
-          backdrop-filter: blur(10px);
-        }
-        .navbar-inner {
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-        }
-        .navbar-logo {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex-shrink: 0;
-          text-decoration: none;
-        }
-        .navbar-mark {
-          color: var(--color-ink);
-          flex-shrink: 0;
-          display: flex;
-        }
-        .navbar-mark-img {
-          width: 36px;
-          height: 36px;
-          object-fit: cover;
-          border-radius: 50%;
-          border: 1px solid var(--color-border);
-        }
-        .navbar-logo-text {
-          display: flex;
-          flex-direction: column;
-          line-height: 1.25;
-        }
-        .navbar-logo-name {
-          font-family: var(--font-heading);
-          font-size: 15px;
-          font-weight: 800;
-          letter-spacing: 0.2px;
-          color: var(--color-text);
-          white-space: nowrap;
-        }
-        .navbar-logo-name-svg {
-          display: inline-flex;
-          align-items: baseline;
-        }
-        .logo-visible-parts {
-          display: inline-flex;
-          align-items: baseline;
-        }
-        .logo-o-wrap {
-          display: inline-flex;
-          align-items: center;
-          margin: 0 0.5px;
-          transform: translateY(1.5px);
-        }
+        .navbar { position: sticky; top: 0; z-index: 100; background: var(--color-surface); border-bottom: 1px solid var(--color-border); height: var(--header-height); backdrop-filter: blur(10px); }
+        .navbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .navbar-logo { display: flex; align-items: center; gap: 12px; flex-shrink: 0; text-decoration: none; }
+        .navbar-mark { color: var(--color-ink); flex-shrink: 0; display: flex; }
+        .navbar-mark-img { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; border: 1px solid var(--color-border); }
+        .navbar-logo-text { display: flex; flex-direction: column; line-height: 1.25; }
+        .navbar-logo-name { font-family: var(--font-heading); font-size: 15px; font-weight: 800; letter-spacing: 0.2px; color: var(--color-text); white-space: nowrap; }
+        .navbar-logo-name-svg { display: inline-flex; align-items: baseline; }
+        .logo-visible-parts { display: inline-flex; align-items: baseline; }
+        .logo-o-wrap { display: inline-flex; align-items: center; margin: 0 0.5px; transform: translateY(1.5px); }
         .logo-o-svg { color: var(--color-text); flex-shrink: 0; }
-        .sr-only {
-          position: absolute;
-          width: 1px; height: 1px;
-          overflow: hidden;
-          clip: rect(0,0,0,0);
-          white-space: nowrap;
-        }
-        .navbar-logo-sub {
-          font-family: var(--font-mono);
-          font-size: 9.5px;
-          font-weight: 700;
-          letter-spacing: 1.6px;
-          text-transform: uppercase;
-          color: var(--color-text-muted);
-        }
-        .navbar-links {
-          display: none;
-          gap: 4px;
-        }
-        .nav-link {
-          padding: 8px 18px;
-          border-radius: 0;
-          font-size: 12.5px;
-          font-weight: 600;
-          letter-spacing: 0.6px;
-          text-transform: uppercase;
-          color: var(--color-text-muted);
-          transition: color 0.2s;
-          position: relative;
-        }
-        .nav-link::after {
-          content: '';
-          position: absolute;
-          left: 18px;
-          right: 18px;
-          bottom: 4px;
-          height: 1px;
-          background: var(--color-ink);
-          transform: scaleX(0);
-          transform-origin: left;
-          transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
-        }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+        .navbar-logo-sub { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--color-text-muted); }
+        .navbar-links { display: none; gap: 4px; }
+        .nav-link { padding: 8px 18px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--color-text-muted); transition: color 0.2s; position: relative; }
+        .nav-link::after { content: ''; position: absolute; left: 18px; right: 18px; bottom: 4px; height: 1px; background: var(--color-ink); transform: scaleX(0); transform-origin: left; transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
         .nav-link:hover { color: var(--color-text); }
         .nav-link:hover::after, .nav-link.active::after { transform: scaleX(1); }
         .nav-link.active { color: var(--color-text); }
-        .navbar-actions {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-        .cart-btn {
-          position: relative;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 0;
-          background: transparent;
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
-          transition: all 0.2s;
-        }
-        .cart-btn:hover {
-          background: var(--color-ink);
-          color: var(--color-paper);
-          border-color: var(--color-ink);
-        }
-        .cart-count {
-          position: absolute;
-          top: -6px;
-          right: -6px;
-          background: var(--color-red);
-          color: #fff;
-          font-family: var(--font-mono);
-          font-size: 10px;
-          font-weight: 700;
-          border-radius: 999px;
-          padding: 1px 5px;
-          min-width: 17px;
-          text-align: center;
-          line-height: 1.4;
-        }
-        @media (min-width: 768px) {
-          .navbar-links { display: flex; }
-        }
+        .navbar-actions { display: flex; align-items: center; gap: 14px; }
+        .cart-btn { position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--color-text); border: 1px solid var(--color-border); transition: all 0.2s; }
+        .cart-btn:hover { background: var(--color-ink); color: var(--color-paper); border-color: var(--color-ink); }
+        .cart-count { position: absolute; top: -6px; right: -6px; background: var(--color-red); color: #fff; font-family: var(--font-mono); font-size: 10px; font-weight: 700; border-radius: 999px; padding: 1px 5px; min-width: 17px; text-align: center; line-height: 1.4; }
+        @media (min-width: 768px) { .navbar-links { display: flex; } }
       `}</style>
     </header>
   )
