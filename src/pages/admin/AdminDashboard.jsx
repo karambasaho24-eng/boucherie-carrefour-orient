@@ -1,12 +1,6 @@
-// ============================================================
-// src/pages/admin/AdminDashboard.jsx  (RESTAURÉ)
-// Routeur d'onglets admin : Tableau de bord, Performances,
-// Commandes, Produits, Stocks, Paramètres.
-// ============================================================
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signOut } from '../../lib/api'
+import { signOut, fetchSiteConfig } from '../../lib/api'
 import { useAuth } from '../../hooks/useAuth'
 import AdminDashboardStats from './AdminDashboardStats'
 import AdminSnapshots from './AdminSnapshots'
@@ -26,8 +20,13 @@ const TABS = [
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('dashboard')
+  const [config, setConfig] = useState(null)
   const { profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    fetchSiteConfig().then(setConfig).catch(console.error)
+  }, [])
 
   async function handleLogout() {
     await signOut()
@@ -39,23 +38,23 @@ export default function AdminDashboard() {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <svg viewBox="0 0 40 40" width="30" height="30">
-            <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
-            <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
-          </svg>
+          {config?.logo_url ? (
+            <img src={config.logo_url} alt="" className="admin-brand-img" />
+          ) : (
+            <svg viewBox="0 0 40 40" width="30" height="30">
+              <circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" strokeWidth="1" />
+              <line x1="11" y1="20" x2="29" y2="20" stroke="currentColor" strokeWidth="1" />
+            </svg>
+          )}
           <div>
-            <p className="admin-brand-title">Carrefour d'Orient</p>
+            <p className="admin-brand-title">{config?.site_title || "Carrefour d'Orient"}</p>
             <p className="admin-brand-sub">Administration</p>
           </div>
         </div>
 
         <nav className="admin-nav">
           {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={`admin-nav-item ${tab === t.id ? 'active' : ''}`}
-              onClick={() => setTab(t.id)}
-            >
+            <button key={t.id} className={`admin-nav-item ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
               {t.label}
             </button>
           ))}
@@ -71,11 +70,7 @@ export default function AdminDashboard() {
         <div className="admin-topbar">
           <div className="admin-tabs">
             {TABS.map((t) => (
-              <button
-                key={t.id}
-                className={`tab-btn ${tab === t.id ? 'active' : ''}`}
-                onClick={() => setTab(t.id)}
-              >
+              <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
                 {t.label}
               </button>
             ))}
@@ -97,6 +92,7 @@ export default function AdminDashboard() {
         .admin-layout { min-height: 100vh; display: flex; background: var(--color-paper); }
         .admin-sidebar { display: none; width: 240px; flex-shrink: 0; background: var(--color-surface); border-right: 1px solid var(--color-border); flex-direction: column; padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
         .admin-brand { display: flex; align-items: center; gap: 12px; padding: 0 22px 22px; border-bottom: 1px solid var(--color-border); color: var(--color-ink); }
+        .admin-brand-img { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; border: 1px solid var(--color-border); flex-shrink: 0; }
         .admin-brand-title { font-weight: 700; font-size: 13px; margin: 0; color: var(--color-text); }
         .admin-brand-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--color-text-muted); margin: 2px 0 0; }
         .admin-nav { padding: 14px 0; flex: 1; }
