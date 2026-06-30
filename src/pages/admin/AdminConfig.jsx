@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchSiteConfig, updateSiteConfig, uploadSiteImage } from '../../lib/api'
 
+const BUSINESS_TYPES = [
+  { id: 'boucherie',    label: 'Boucherie',     defaultUnit: 'kg',    subtitle: 'Boucherie · Halal' },
+  { id: 'poissonnerie', label: 'Poissonnerie',  defaultUnit: 'kg',    subtitle: 'Poissonnerie' },
+  { id: 'epicerie',     label: 'Épicerie',      defaultUnit: 'unite', subtitle: 'Épicerie · Halal' },
+  { id: 'restaurant',   label: 'Restaurant',    defaultUnit: 'unite', subtitle: 'Restaurant' },
+  { id: 'autre',        label: 'Autre commerce',defaultUnit: 'unite', subtitle: '' },
+]
+
 const THEME_COLORS = [
   { id: 'original',   label: 'Original (noir/blanc/rouge)', swatch: '#0a0a0a' },
   { id: 'red',        label: 'Rouge',             swatch: '#b5181f' },
@@ -24,6 +32,7 @@ export default function AdminConfig() {
   const [error, setError] = useState('')
   const bannerRef = useRef()
   const logoRef = useRef()
+  const faviconRef = useRef()
 
   useEffect(() => {
     fetchSiteConfig()
@@ -65,6 +74,20 @@ export default function AdminConfig() {
     }
   }
 
+  async function handleFaviconUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadSiteImage(file)
+      setConfig((c) => ({ ...c, favicon_url: url }))
+    } catch {
+      setError('Erreur upload favicon.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   function handleThemeChange(themeId) {
     setConfig((c) => ({ ...c, theme_color: themeId }))
     // Aperçu immédiat, avant même la sauvegarde.
@@ -84,6 +107,8 @@ export default function AdminConfig() {
     try {
       await updateSiteConfig({
         site_title: config.site_title,
+        business_type: config.business_type ?? 'boucherie',
+        favicon_url: config.favicon_url ?? '',
         hero_title: config.hero_title,
         hero_subtitle: config.hero_subtitle,
         opening_hours: config.opening_hours,
@@ -186,6 +211,44 @@ export default function AdminConfig() {
               Supprimer
             </button>
           )}
+        </div>
+
+        <div className="config-block">
+          <h4>Favicon (icône d'onglet navigateur)</h4>
+          <p className="text-muted" style={{ fontSize: 12.5, marginTop: -6, marginBottom: 12 }}>
+            Petite icône affichée dans l'onglet du navigateur. Format carré recommandé (ex : 64×64px, PNG ou ICO).
+          </p>
+          {config.favicon_url && (
+            <img src={config.favicon_url} alt="Favicon" className="favicon-preview" />
+          )}
+          <input ref={faviconRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFaviconUpload} />
+          <button className="btn btn-ghost btn-sm" onClick={() => faviconRef.current.click()} disabled={uploading}>
+            {uploading ? 'Upload…' : 'Choisir un favicon'}
+          </button>
+          {config.favicon_url && (
+            <button className="btn btn-danger btn-sm banner-delete-btn" onClick={() => setConfig((c) => ({ ...c, favicon_url: '' }))}>
+              Supprimer
+            </button>
+          )}
+        </div>
+
+        <div className="config-block">
+          <h4>Type de commerce</h4>
+          <p className="text-muted" style={{ fontSize: 12.5, marginTop: -6, marginBottom: 14 }}>
+            Adapte automatiquement le sous-titre affiché sur le site et l'unité de mesure suggérée pour vos produits (kg, unité…).
+          </p>
+          <div className="business-type-grid">
+            {BUSINESS_TYPES.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                className={`business-type-btn${(config.business_type || 'boucherie') === b.id ? ' active' : ''}`}
+                onClick={() => setConfig((c) => ({ ...c, business_type: b.id }))}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="config-block">
@@ -407,6 +470,11 @@ export default function AdminConfig() {
         @media (min-width: 1024px) { .config-grid { grid-template-columns: 1fr 1fr 1fr; } }
         .banner-preview { width: 100%; height: 140px; object-fit: cover; margin-bottom: 12px; border: 1px solid var(--color-border); }
         .logo-preview { width: 72px; height: 72px; object-fit: cover; margin-bottom: 12px; border: 1px solid var(--color-border); border-radius: 6px; }
+        .favicon-preview { width: 40px; height: 40px; object-fit: cover; margin-bottom: 12px; border: 1px solid var(--color-border); border-radius: 6px; }
+        .business-type-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .business-type-btn { padding: 9px 16px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--color-border); background: var(--color-paper-dim); color: var(--color-text-muted); transition: all 0.2s; cursor: pointer; }
+        .business-type-btn:hover { color: var(--color-text); }
+        .business-type-btn.active { background: var(--color-ink); color: var(--color-paper); border-color: var(--color-ink); }
         .theme-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
         .theme-swatch-btn { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--color-border); background: var(--color-paper-dim); transition: all 0.2s; }
         .theme-swatch-btn:hover { border-color: var(--color-text-muted); }
