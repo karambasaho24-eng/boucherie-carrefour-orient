@@ -30,7 +30,15 @@ function LogoTitle({ title }) {
   )
 }
 
-export default function Navbar({ siteTitle, logoUrl }) {
+const BUSINESS_LABELS = {
+  boucherie:    'Boucherie · Halal',
+  poissonnerie: 'Poissonnerie',
+  epicerie:     'Épicerie · Halal',
+  restaurant:   'Restaurant',
+  autre:        '',
+}
+
+export default function Navbar({ siteTitle, logoUrl, businessType }) {
   const { count } = useCart()
 
   return (
@@ -50,7 +58,9 @@ export default function Navbar({ siteTitle, logoUrl }) {
           </span>
           <div className="navbar-logo-text">
             <LogoTitle title={siteTitle} />
-            <span className="navbar-logo-sub">Boucherie · Halal</span>
+            {(BUSINESS_LABELS[businessType] ?? BUSINESS_LABELS.boucherie) && (
+              <span className="navbar-logo-sub">{BUSINESS_LABELS[businessType] ?? BUSINESS_LABELS.boucherie}</span>
+            )}
           </div>
         </Link>
 
@@ -105,7 +115,8 @@ export default function Navbar({ siteTitle, logoUrl }) {
           width: 36px;
           height: 36px;
           object-fit: cover;
-          border-radius: 4px;
+          border-radius: 50%;
+          border: 1px solid var(--color-border);
         }
         .navbar-logo-text {
           display: flex;
