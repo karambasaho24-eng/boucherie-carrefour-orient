@@ -91,7 +91,7 @@ export default function App() {
                       <Route path="/boutique" element={<Shop />} />
                       <Route path="/produit/:id" element={<Product />} />
                       <Route path="/panier" element={<Cart config={config} />} />
-                      <Route path="/commande/:id" element={<OrderStatus />} />
+                      <Route path="commande/:id" element={<OrderStatus />} />
                     </Routes>
                   </main>
                   <Footer config={config} />
