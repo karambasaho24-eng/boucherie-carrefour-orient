@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { CartProvider } from './hooks/useCart'
 import { AuthProvider } from './hooks/useAuth'
 import { fetchSiteConfig } from './lib/api'
@@ -19,6 +19,21 @@ import Cart from './pages/Cart'
 import OrderStatus from './pages/OrderStatus'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
+
+function PublicLayout({ config }) {
+  return (
+    <>
+      <OrderReminder />
+      <Navbar siteTitle={config?.site_title} logoUrl={config?.logo_url} />
+      <main className="main-content">
+        <Outlet />
+      </main>
+      <Footer config={config} />
+      <WhatsAppButton phone={config?.phone} />
+      <CartToast />
+    </>
+  )
+}
 
 export default function App() {
   const [config, setConfig] = useState(null)
@@ -70,6 +85,7 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <Routes>
+            {/* Admin */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin"
@@ -79,27 +95,15 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="*"
-              element={
-                <>
-                  <OrderReminder />
-                  <Navbar siteTitle={config?.site_title} logoUrl={config?.logo_url} />
-                  <main className="main-content">
-                    <Routes>
-                      <Route path="/" element={<Home config={config} />} />
-                      <Route path="/boutique" element={<Shop />} />
-                      <Route path="/produit/:id" element={<Product />} />
-                      <Route path="/panier" element={<Cart config={config} />} />
-                      <Route path="commande/:id" element={<OrderStatus />} />
-                    </Routes>
-                  </main>
-                  <Footer config={config} />
-                  <WhatsAppButton phone={config?.phone} />
-                  <CartToast />
-                </>
-              }
-            />
+
+            {/* Site public — layout commun */}
+            <Route element={<PublicLayout config={config} />}>
+              <Route path="/" element={<Home config={config} />} />
+              <Route path="/boutique" element={<Shop />} />
+              <Route path="/produit/:id" element={<Product />} />
+              <Route path="/panier" element={<Cart config={config} />} />
+              <Route path="/commande/:id" element={<OrderStatus />} />
+            </Route>
           </Routes>
         </CartProvider>
       </AuthProvider>
