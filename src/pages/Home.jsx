@@ -188,34 +188,7 @@ export default function Home({ config }) {
         </div>
       </section>
 
-      {/* ── INFO STRIP ── */}
-      <section className="info-strip">
-        <div className="container info-strip-inner">
-          <div className="info-item reveal">
-            <span className="info-index">01</span>
-            <div>
-              <div className="info-label">Adresse</div>
-              <div className="info-value">{config?.address || '55 Place des Sablons, 72100 Le Mans'}</div>
-            </div>
-          </div>
-          <div className="info-item reveal reveal-delay-1">
-            <span className="info-index">02</span>
-            <div>
-              <div className="info-label">Horaires</div>
-              <div className="info-value">{config?.opening_hours || 'Lun–Sam · 09:30 – 19:30'}</div>
-            </div>
-          </div>
-          <div className="info-item reveal reveal-delay-2">
-            <span className="info-index">03</span>
-            <div>
-              <div className="info-label">Certification</div>
-              <div className="info-value">100 % Halal & vente directe</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── QUALITY PILLARS ── */}
+      {/* ── QUALITY PILLARS ── */}}
       <section className="pillars-section">
         <div className="container">
           <div className="reveal section-head">
@@ -294,32 +267,6 @@ export default function Home({ config }) {
             <a href={`tel:${phoneClean}`} className="btn btn-outline" style={{ marginTop: 28 }}>
               Nous appeler
             </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SPECIALTIES ── */}
-      <section className="specialties-section">
-        <div className="container">
-          <div className="reveal section-head">
-            <div className="section-label">Nos spécialités</div>
-            <h2 className="section-title">Épicerie & rôtisserie orientale</h2>
-          </div>
-          <div className="specialties-grid">
-            {[
-              { n: '01', label: 'Bœuf', desc: 'Côtes, steaks, mincés…' },
-              { n: '02', label: 'Agneau', desc: 'Gigot, côtelettes, épaule…' },
-              { n: '03', label: 'Volaille', desc: 'Poulet entier, cuisses, ailes…' },
-              { n: '04', label: 'Merguez', desc: 'Fraîches, maison, épicées…' },
-              { n: '05', label: 'Épicerie', desc: 'Produits orientaux sélectionnés' },
-              { n: '06', label: 'Rôtisserie', desc: 'Poulets rôtis, brochettes…' },
-            ].map((s, i) => (
-              <div key={i} className={`specialty-item reveal reveal-delay-${i % 3}`}>
-                <span className="specialty-num">{s.n}</span>
-                <span className="specialty-label">{s.label}</span>
-                <span className="specialty-desc">{s.desc}</span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
