@@ -141,7 +141,7 @@ export default function Home({ config }) {
 
         <div className="hero-topline">
           <span className="hero-eyebrow">Établissement artisan · Le Mans</span>
-          <span className="hero-eyebrow hero-eyebrow-right">N°55 · Place des Sablons</span>
+          <span className="hero-eyebrow hero-eyebrow-right"></span>
         </div>
 
         <div className="hero-center" ref={tiltRef}>
@@ -150,14 +150,14 @@ export default function Home({ config }) {
               <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" strokeWidth="1" />
               <circle cx="100" cy="100" r="80" fill="none" strokeWidth="0.6" stroke="currentColor" strokeDasharray="2 4" />
               <text x="100" y="40" textAnchor="middle" className="stamp-text-top">QUALITÉ · HALAL · FRAÎCHEUR</text>
-              <text x="100" y="168" textAnchor="middle" className="stamp-text-bottom">DEPUIS LES SABLONS</text>
+              <text x="100" y="168" textAnchor="middle" className="stamp-text-bottom"></text>
             </svg>
           </div>
 
           <h1 className="hero-title">
             <span className="hero-title-line">BOUCHE<span className="hero-title-accent">R</span>IE</span>
             <span className="hero-title-rule" />
-            <span className="hero-title-sub">{config?.hero_title || "Carrefour d'Orient"}</span>
+            <span className="hero-title-sub">{config?.hero_title || "Tradisud Halal"}</span>
           </h1>
 
           <p className="hero-subtitle">
@@ -188,7 +188,34 @@ export default function Home({ config }) {
         </div>
       </section>
 
-      {/* ── QUALITY PILLARS ── */}}
+      {/* ── INFO STRIP ── */}
+      <section className="info-strip">
+        <div className="container info-strip-inner">
+          <div className="info-item reveal">
+            <span className="info-index">01</span>
+            <div>
+              <div className="info-label">Adresse</div>
+              <div className="info-value">{config?.address || '55 Place des Sablons, 72100 Le Mans'}</div>
+            </div>
+          </div>
+          <div className="info-item reveal reveal-delay-1">
+            <span className="info-index">02</span>
+            <div>
+              <div className="info-label">Horaires</div>
+              <div className="info-value">{config?.opening_hours || 'Lun–Sam · 09:30 – 19:30'}</div>
+            </div>
+          </div>
+          <div className="info-item reveal reveal-delay-2">
+            <span className="info-index">03</span>
+            <div>
+              <div className="info-label">Certification</div>
+              <div className="info-value">100 % Halal & vente directe</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── QUALITY PILLARS ── */}
       <section className="pillars-section">
         <div className="container">
           <div className="reveal section-head">
@@ -262,11 +289,37 @@ export default function Home({ config }) {
             <h2 className="ambiance-title">{config?.about_title || 'Notre histoire'}</h2>
             <p className="ambiance-text">
               {config?.about_text ||
-                "Installée au cœur des Sablons au Mans, la Boucherie Carrefour d'Orient vous accueille chaque jour avec des produits frais, une découpe soignée et le sourire. Notre passion : vous offrir la meilleure viande halal au meilleur prix."}
+                "Installée au cœur des Sablons au Mans, la Boucherie Tradisud Halal vous accueille chaque jour avec des produits frais, une découpe soignée et le sourire. Notre passion : vous offrir la meilleure viande halal au meilleur prix."}
             </p>
             <a href={`tel:${phoneClean}`} className="btn btn-outline" style={{ marginTop: 28 }}>
               Nous appeler
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SPECIALTIES ── */}
+      <section className="specialties-section">
+        <div className="container">
+          <div className="reveal section-head">
+            <div className="section-label">Nos spécialités</div>
+            <h2 className="section-title">Épicerie & rôtisserie orientale</h2>
+          </div>
+          <div className="specialties-grid">
+            {[
+              { n: '01', label: 'Bœuf', desc: 'Côtes, steaks, mincés…' },
+              { n: '02', label: 'Agneau', desc: 'Gigot, côtelettes, épaule…' },
+              { n: '03', label: 'Volaille', desc: 'Poulet entier, cuisses, ailes…' },
+              { n: '04', label: 'Merguez', desc: 'Fraîches, maison, épicées…' },
+              { n: '05', label: 'Épicerie', desc: 'Produits orientaux sélectionnés' },
+              { n: '06', label: 'Rôtisserie', desc: 'Poulets rôtis, brochettes…' },
+            ].map((s, i) => (
+              <div key={i} className={`specialty-item reveal reveal-delay-${i % 3}`}>
+                <span className="specialty-num">{s.n}</span>
+                <span className="specialty-label">{s.label}</span>
+                <span className="specialty-desc">{s.desc}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
