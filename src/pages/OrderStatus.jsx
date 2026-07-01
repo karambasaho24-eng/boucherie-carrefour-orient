@@ -9,7 +9,7 @@ const STATUS_LABELS = {
   pending: 'En attente',
   confirmed: 'Confirmée',
   preparing: 'En préparation',
-  ready: 'Prête',
+  ready: 'Prête à récupérer',
   paid: 'Payée',
   completed: 'Terminée',
   refused: 'Refusée',
@@ -17,14 +17,33 @@ const STATUS_LABELS = {
 }
 
 const STATUS_DESCRIPTIONS = {
-  pending: "Votre commande a été reçue. La boucherie va bientôt la traiter — vous pouvez encore la modifier ou l'annuler.",
-  confirmed: 'Votre commande a été confirmée par la boucherie et est en cours de traitement.',
-  preparing: 'La boucherie prépare actuellement votre commande.',
-  ready: 'Votre commande est prête à être récupérée !',
-  paid: 'Votre paiement a bien été reçu. Merci !',
-  completed: 'Cette commande a été terminée. Merci de votre confiance !',
-  refused: 'Cette commande a été refusée par la boucherie.',
-  cancelled: 'Cette commande a été annulée.',
+  pending:   "Votre commande a bien été enregistrée. Elle est maintenant en attente de validation par la boucherie.",
+  confirmed: "Votre commande a été confirmée par la boucherie. La préparation va débuter.",
+  preparing: "La boucherie prépare actuellement votre commande. Merci de patienter.",
+  ready:     "Votre commande est prête ! Vous pouvez venir la récupérer à la boucherie.",
+  paid:      "Votre paiement a bien été reçu. Merci pour votre confiance !",
+  completed: "Cette commande est terminée. Merci pour votre confiance !",
+  refused:   "Cette commande a été refusée par la boucherie. Contactez-nous pour plus d'informations.",
+  cancelled: "Cette commande a été annulée.",
+}
+
+const STATUS_ALERTS = {
+  pending: {
+    type: 'warning',
+    text: "N'allez pas récupérer votre commande avant d'avoir reçu la confirmation de la boucherie. Merci de patienter.",
+  },
+  confirmed: {
+    type: 'info',
+    text: "La boucherie a validé votre commande. La préparation peut prendre un certain temps.",
+  },
+  preparing: {
+    type: 'info',
+    text: "Votre commande est en cours de préparation. Vous serez averti dès qu'elle sera prête.",
+  },
+  ready: {
+    type: 'success',
+    text: "Vous pouvez maintenant venir récupérer votre commande à la boucherie !",
+  },
 }
 
 export default function OrderStatus() {
@@ -68,9 +87,6 @@ export default function OrderStatus() {
 
   useEffect(() => { load() }, [id])
 
-  // Supabase Realtime : écoute les changements sur CETTE commande précise,
-  // pour que le statut (confirmation, paiement, etc.) se mette à jour
-  // instantanément côté client sans recharger la page.
   useEffect(() => {
     if (!id) return
     const channel = supabase
@@ -87,7 +103,6 @@ export default function OrderStatus() {
         }
       )
       .subscribe()
-
     return () => { supabase.removeChannel(channel) }
   }, [id])
 
@@ -99,9 +114,7 @@ export default function OrderStatus() {
 
   function updateQty(itemId, qty) {
     setEditItems((prev) =>
-      prev
-        .map((i) => (i.id === itemId ? { ...i, qty } : i))
-        .filter((i) => i.qty > 0)
+      prev.map((i) => (i.id === itemId ? { ...i, qty } : i)).filter((i) => i.qty > 0)
     )
   }
 
@@ -186,12 +199,19 @@ export default function OrderStatus() {
       <div className="container order-status-body">
         <div className="status-card">
           <span className="badge badge-status status-badge-large">{STATUS_LABELS[order.status]}</span>
-          <p className="text-muted" style={{ marginTop: 10 }}>{STATUS_DESCRIPTIONS[order.status]}</p>
+          <p className="status-desc">{STATUS_DESCRIPTIONS[order.status]}</p>
+          {STATUS_ALERTS[order.status] && (
+            <div className={`status-alert status-alert-${STATUS_ALERTS[order.status].type}`}>
+              {STATUS_ALERTS[order.status].type === 'warning' && '⚠️ '}
+              {STATUS_ALERTS[order.status].type === 'info' && 'ℹ️ '}
+              {STATUS_ALERTS[order.status].type === 'success' && '✅ '}
+              {STATUS_ALERTS[order.status].text}
+            </div>
+          )}
         </div>
 
         <div className="status-block">
           <h3>Détail de la commande</h3>
-
           {editing ? (
             <>
               {editItems.map((item) => (
@@ -229,9 +249,7 @@ export default function OrderStatus() {
                 <span>Total</span>
                 <strong>{order.total_price.toFixed(2)} €</strong>
               </div>
-
               {actionError && <p className="error-msg">{actionError}</p>}
-
               {canModify && (
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
                   <button className="btn btn-ghost btn-block" onClick={startEditing} disabled={saving}>
@@ -290,76 +308,30 @@ export default function OrderStatus() {
       </div>
 
       <style>{`
-        .order-status-state {
-          padding: 80px 16px;
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-        }
+        .order-status-state { padding: 80px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
         .order-status-page { padding-bottom: 70px; }
-        .order-status-header {
-          background: var(--color-ink);
-          padding: 56px 0 40px;
-          color: var(--color-paper);
-          margin-bottom: 32px;
-        }
-        .order-status-header h1 {
-          font-family: var(--font-heading);
-          font-size: 28px;
-          font-weight: 800;
-          letter-spacing: -0.3px;
-          margin: 6px 0 0;
-          color: var(--color-paper);
-        }
-        .order-status-body {
-          max-width: 560px;
-          display: flex;
-          flex-direction: column;
-          gap: 1px;
-          background: var(--color-border);
-          border: 1px solid var(--color-border);
-        }
+        .order-status-header { background: var(--color-ink); padding: 56px 0 40px; color: var(--color-paper); margin-bottom: 32px; }
+        .order-status-header h1 { font-family: var(--font-heading); font-size: 28px; font-weight: 800; letter-spacing: -0.3px; margin: 6px 0 0; color: var(--color-paper); }
+        .order-status-body { max-width: 560px; display: flex; flex-direction: column; gap: 1px; background: var(--color-border); border: 1px solid var(--color-border); }
         .status-card, .status-block { padding: 22px 24px; background: var(--color-surface); }
         .status-card { text-align: center; }
         .status-badge-large { font-size: 11px; padding: 6px 16px; }
-        .status-block h3 {
-          font-family: var(--font-display);
-          font-weight: 600;
-          font-size: 17px;
-          margin: 0 0 16px;
-          color: var(--color-text);
-        }
+        .status-desc { color: var(--color-text-muted); margin-top: 10px; margin-bottom: 0; font-size: 13.5px; line-height: 1.6; }
+        .status-alert { margin-top: 14px; padding: 12px 16px; font-size: 13px; font-weight: 600; line-height: 1.55; text-align: left; }
+        .status-alert-warning { background: rgba(181,24,31,0.07); border: 1px solid rgba(181,24,31,0.28); color: var(--color-red); }
+        .status-alert-info { background: rgba(40,80,160,0.06); border: 1px solid rgba(40,80,160,0.22); color: #2850a0; }
+        .status-alert-success { background: rgba(47,107,58,0.07); border: 1px solid rgba(47,107,58,0.28); color: #2f6b3a; }
+        .status-block h3 { font-family: var(--font-display); font-weight: 600; font-size: 17px; margin: 0 0 16px; color: var(--color-text); }
         .status-block-sm { font-size: 13px; }
-        .order-item-row, .edit-item-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 9px 0;
-          border-bottom: 1px solid var(--color-border);
-          font-size: 14px;
-        }
+        .order-item-row, .edit-item-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--color-border); font-size: 14px; }
         .edit-item-row { gap: 10px; }
         .edit-item-name { flex: 1; }
         .edit-item-total { min-width: 56px; text-align: right; font-weight: 700; font-family: var(--font-mono); }
         .qty-controls { display: flex; align-items: center; gap: 0; border: 1px solid var(--color-border); }
-        .qty-controls button {
-          width: 26px; height: 26px;
-          border: none;
-          background: transparent;
-          font-size: 14px;
-          transition: background 0.15s;
-        }
+        .qty-controls button { width: 26px; height: 26px; border: none; background: transparent; font-size: 14px; transition: background 0.15s; }
         .qty-controls button:hover { background: var(--color-paper-dim); }
         .qty-controls span { font-family: var(--font-mono); font-size: 13px; min-width: 22px; text-align: center; display: inline-block; }
-        .total-row {
-          display: flex; justify-content: space-between; align-items: center;
-          border-top: 1px solid var(--color-border); padding-top: 14px; margin-top: 10px;
-          font-size: 18px; font-weight: 700;
-          font-family: var(--font-mono);
-          color: var(--color-text);
-        }
+        .total-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-border); padding-top: 14px; margin-top: 10px; font-size: 18px; font-weight: 700; font-family: var(--font-mono); color: var(--color-text); }
         .total-row span { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--color-text-muted); font-family: var(--font-mono); }
         .error-msg { color: var(--color-red); font-size: 13px; margin: 10px 0 0; background: rgba(181,24,31,0.06); padding: 10px 14px; border: 1px solid rgba(181,24,31,0.25); }
       `}</style>
